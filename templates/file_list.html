@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File List</title>
+</head>
+<body>
+    <h1>Uploaded Files</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Uploaded At</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+            <tr>
+                <td>{{ file.upload_file.name }}</td>
+                <td>{{ file.uploaded_at }}</td>
+                <td><a href="{% url 'file_detail' pk=file.pk %}">View Details</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'upload_file' %}">Upload New File</a>
+</body>
+</html>

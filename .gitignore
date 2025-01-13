@@ -1,0 +1,6 @@
+venv/
+Student/__pycache__/
+Student/migrations/
+Adaptive_Learning/__pycache__
+.vscode/
+

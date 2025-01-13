@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Details</title>
+</head>
+<body>
+    <h1>File Details</h1>
+    <h2>Summary:</h2>
+    <p>{{ upload.summary }}</p>
+
+    <h2>Keywords:</h2>
+    <ul>
+        {% for keyword in keywords %}
+            <li>{{ keyword }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Translate Text</h3>
+    <form method="POST">
+        {% csrf_token %}
+        <label for="target_lang">Select Language:</label>
+        <select name="target_lang" id="target_lang">
+            {% for code, name in languages %}
+                <option value="{{ code }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+    
+        <label for="text_to_translate">Text to Translate:</label>
+        <textarea name="text_to_translate" id="text_to_translate" rows="4"></textarea>
+    
+        <button type="submit">Translate</button>
+    </form>
+    
+    {% if translated_text %}
+        <h3>Translated Text:</h3>
+        <p>{{ translated_text }}</p>
+    {% endif %}
+    
+
+    {% if translated_text %}
+        <h2>Translated Text:</h2>
+        <p>{{ translated_text }}</p>
+    {% endif %}
+</body>
+</html>
+    

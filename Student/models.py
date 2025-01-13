@@ -16,7 +16,7 @@ import docx
 import nltk
 from nltk.tokenize import PunktSentenceTokenizer
 from sumy.nlp.tokenizers import Tokenizer
-
+from django.conf import settings
 # Create your models here
 
 """
@@ -204,15 +204,18 @@ class UploadFile(models.Model):
         return ' '.join([str(sentence) for sentence in summary])
 
     def convert_pptx_to_pdf(self):
-        pptx_path = self.upload_file.path
+        pptx_path = os.path.join(settings.MEDIA_ROOT, 'documents', os.path.basename(self.upload_file.name))
         pdf_dir = os.path.dirname(pptx_path)
+        pdf_path = None
         try:
             pythoncom.CoInitialize()
+            print(f"File path for conversion: {self.upload_file.path}")
+
             convert(pptx_path, pdf_dir)
             pdf_path = pptx_path.replace('.pptx', '.pdf')
             if os.path.exists(pdf_path):
                 self.upload_file.name = self.upload_file.name.replace('.pptx', '.pdf')
-                self.upload_file.save()  
+                self.upload_file.save()
         except Exception as e:
             print(f"Error converting .pptx to .pdf: {e}")
         finally:
@@ -220,12 +223,13 @@ class UploadFile(models.Model):
 
     def process_file(self):
         file_path = self.upload_file.path
+        print(f"Processing file: {file_path}")  
         if self.student_options == 'Keywords':
             if file_path.endswith('.pdf'):
                 self.keywords = self.extract_keywords_from_pdf(file_path)
             elif file_path.endswith('.docx'):
                 self.keywords = self.extract_keywords_from_docx(file_path)
-            self.__class__.objects.filter(id=self.id).update(keywords=self.keywords) 
+            self.__class__.objects.filter(id=self.id).update(keywords=self.keywords)
         elif self.student_options == 'Summary':
             if file_path.endswith('.pdf'):
                 self.summary = self.generate_summary_from_pdf(file_path)

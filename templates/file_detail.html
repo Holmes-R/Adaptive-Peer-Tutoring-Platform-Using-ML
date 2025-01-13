@@ -6,8 +6,26 @@
 </head>
 <body>
     <h1>File Details</h1>
+
     <h2>Summary:</h2>
     <p>{{ upload.summary }}</p>
+
+    {% if translated_summary %}
+        <h3>Translated Summary:</h3>
+        <p>{{ translated_summary }}</p>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="translate_type" value="summary">
+            <label for="target_lang_summary">Translate Summary to:</label>
+            <select id="target_lang_summary" name="target_lang">
+                {% for code, lang in languages %}
+                    <option value="{{ code }}">{{ lang }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Translate Summary</button>
+        </form>
+    {% endif %}
 
     <h2>Keywords:</h2>
     <ul>
@@ -16,32 +34,25 @@
         {% endfor %}
     </ul>
 
-    <h3>Translate Text</h3>
-    <form method="POST">
-        {% csrf_token %}
-        <label for="target_lang">Select Language:</label>
-        <select name="target_lang" id="target_lang">
-            {% for code, name in languages %}
-                <option value="{{ code }}">{{ name }}</option>
+    {% if translated_keywords %}
+        <h3>Translated Keywords:</h3>
+        <ul>
+            {% for translated_keyword in translated_keywords %}
+                <li>{{ translated_keyword }}</li>
             {% endfor %}
-        </select>
-    
-        <label for="text_to_translate">Text to Translate:</label>
-        <textarea name="text_to_translate" id="text_to_translate" rows="4"></textarea>
-    
-        <button type="submit">Translate</button>
-    </form>
-    
-    {% if translated_text %}
-        <h3>Translated Text:</h3>
-        <p>{{ translated_text }}</p>
-    {% endif %}
-    
-
-    {% if translated_text %}
-        <h2>Translated Text:</h2>
-        <p>{{ translated_text }}</p>
+        </ul>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="translate_type" value="keywords">
+            <label for="target_lang_keywords">Translate Keywords to:</label>
+            <select id="target_lang_keywords" name="target_lang">
+                {% for code, lang in languages %}
+                    <option value="{{ code }}">{{ lang }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Translate Keywords</button>
+        </form>
     {% endif %}
 </body>
 </html>
-    

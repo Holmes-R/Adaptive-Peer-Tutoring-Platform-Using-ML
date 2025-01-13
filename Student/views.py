@@ -14,7 +14,8 @@ from rest_framework.decorators import  throttle_classes
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 import torch
 import sentencepiece
-
+from gtts import gTTS
+import os
 
 @csrf_exempt
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
@@ -204,6 +205,7 @@ def upload_file(request):
         form = UploadForm()
 
     return render(request, 'upload.html', {'form': form})
+
 model_name = "facebook/m2m100_418M"
 tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 model = M2M100ForConditionalGeneration.from_pretrained(model_name)

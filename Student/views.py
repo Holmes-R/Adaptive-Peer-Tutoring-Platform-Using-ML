@@ -16,7 +16,8 @@ import torch
 import sentencepiece
 from gtts import gTTS
 import os
-
+import pyttsx3
+from comtypes import CoInitialize, CoUninitialize
 @csrf_exempt
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
 def loginUser(request):
@@ -210,7 +211,6 @@ model_name = "facebook/m2m100_418M"
 tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 model = M2M100ForConditionalGeneration.from_pretrained(model_name)
 
-# Supported languages
 LANGUAGES = [
     ("en", "English"),
     ("fr", "French"),
@@ -228,11 +228,21 @@ def translate_with_m2m100(text, target_lang):
     """
     Translate text using M2M-100 model.
     """
-    # Set the tokenizer to the target language
-    tokenizer.src_lang = "en"  # Assuming source text is in English
+  
+    tokenizer.src_lang = "en" 
     encoded_text = tokenizer(text, return_tensors="pt")
     generated_tokens = model.generate(**encoded_text, forced_bos_token_id=tokenizer.get_lang_id(target_lang))
     return tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
+
+def speak(text):
+    """Convert text to speech."""
+    CoInitialize() 
+    try:
+        engine = pyttsx3.init()
+        engine.say(text)
+        engine.runAndWait()
+    finally:
+        CoUninitialize()
 
 def file_detail(request, pk):
     upload = get_object_or_404(UploadFile, pk=pk)
@@ -241,13 +251,27 @@ def file_detail(request, pk):
     translated_keywords = None
 
     if request.method == 'POST':
+        action = request.POST.get('action')  # 'speak' or 'translate'
         target_lang = request.POST.get('target_lang')
         translate_type = request.POST.get('translate_type')
 
-        if translate_type == 'summary' and upload.summary:
-            translated_summary = translate_with_m2m100(upload.summary, target_lang)
-        elif translate_type == 'keywords' and upload.keywords:
-            translated_keywords = [translate_with_m2m100(kw, target_lang) for kw in keywords]
+        if action == 'translate':
+            # Perform translation
+            if translate_type == 'summary' and upload.summary:
+                translated_summary = translate_with_m2m100(upload.summary, target_lang)
+            elif translate_type == 'keywords' and upload.keywords:
+                translated_keywords = [translate_with_m2m100(kw, target_lang) for kw in keywords]
+
+        elif action == 'speak':
+            # Speak the content
+            text_to_speak = None
+            if translate_type == 'summary':
+                text_to_speak = upload.summary if not translated_summary else translated_summary
+            elif translate_type == 'keywords':
+                text_to_speak = ", ".join(keywords) if not translated_keywords else ", ".join(translated_keywords)
+
+            if text_to_speak:
+                speak(text_to_speak)
 
     return render(request, 'file_detail.html', {
         'upload': upload,
@@ -256,7 +280,6 @@ def file_detail(request, pk):
         'translated_keywords': translated_keywords,
         'languages': LANGUAGES,
     })
-
 def file_list(request):
     files = UploadFile.objects.all()
     return render(request, 'file_list.html', {'files': files})

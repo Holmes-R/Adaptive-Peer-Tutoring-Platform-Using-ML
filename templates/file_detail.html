@@ -14,7 +14,7 @@
         <h3>Translated Summary:</h3>
         <p>{{ translated_summary }}</p>
     {% else %}
-        <form method="post">
+        <form method="post" id="summaryForm">
             {% csrf_token %}
             <input type="hidden" name="translate_type" value="summary">
             <label for="target_lang_summary">Translate Summary to:</label>
@@ -42,17 +42,47 @@
             {% endfor %}
         </ul>
     {% else %}
-        <form method="post">
+        <form method="POST" id="keywordsForm">
             {% csrf_token %}
-            <input type="hidden" name="translate_type" value="keywords">
-            <label for="target_lang_keywords">Translate Keywords to:</label>
-            <select id="target_lang_keywords" name="target_lang">
-                {% for code, lang in languages %}
-                    <option value="{{ code }}">{{ lang }}</option>
-                {% endfor %}
-            </select>
-            <button type="submit">Translate Keywords</button>
+            <input type="hidden" name="action" id="actionInput">
+            <input type="hidden" name="translate_type" id="translateTypeInput">
+            <input type="hidden" name="target_lang" value="en">
+
+            <h3>Summary</h3>
+            <p>{{ upload.summary }}</p>
+            <button type="button" onclick="performAction('speak', 'summary')">Speak Summary</button>
+            <button type="button" onclick="performAction('translate', 'summary')">Translate Summary</button>
+
+            <h3>Keywords</h3>
+            <p>{{ keywords|join:', ' }}</p>
+            <button type="button" onclick="performAction('speak', 'keywords')">Speak Keywords</button>
+            <button type="button" onclick="performAction('translate', 'keywords')">Translate Keywords</button>
         </form>
     {% endif %}
+    
+    <script>
+        function performAction(action, type) {
+            // If the action is 'speak', use Web Speech API instead of submitting the form
+            if(action === 'speak') {
+                var text = type === 'summary' ? "{{ upload.summary }}" : "{{ keywords|join:', ' }}";
+                speakText(text);
+            } else {
+                // If it's 'translate', proceed with form submission
+                document.getElementById('actionInput').value = action;
+                document.getElementById('translateTypeInput').value = type;
+                // Only submit the form when action is 'translate'
+                if (type === 'summary') {
+                    document.getElementById('summaryForm').submit();
+                } else {
+                    document.getElementById('keywordsForm').submit();
+                }
+            }
+        }
+
+        function speakText(text) {
+            var speech = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(speech);
+        }
+    </script>
 </body>
 </html>

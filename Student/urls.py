@@ -9,7 +9,8 @@ urlpatterns = [
      path('sign-in/', views.signInUser, name='sign_in'),
       path('upload/', views.upload_file, name='upload_file'),
       path('files/', views.file_list, name='file_list'),
-        path('file/<int:pk>/', views.file_detail, name='file_detail'),
+      path('file/<int:pk>/summary/', views.summary_detail, name='summary_detail'),
+    path('file/<int:pk>/keywords/', views.keywords_detail, name='keywords_detail'),
 
 ]
 

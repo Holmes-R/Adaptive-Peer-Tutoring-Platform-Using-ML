@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Keywords Details</title>
+</head>
+<body>
+    <h1>Keywords Details</h1>
+
+    <h2>Keywords:</h2>
+    <ul>
+        {% for keyword in keywords %}
+            <li>{{ keyword }}</li>
+        {% endfor %}
+    </ul>
+
+    {% if translated_keywords %}
+        <h3>Translated Keywords:</h3>
+        <ul>
+            {% for translated_keyword in translated_keywords %}
+                <li>{{ translated_keyword }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="action" value="translate">Translate</button>
+        <button type="submit" name="action" value="speak">Speak</button>
+    
+        <select name="target_lang">
+            {% for code, name in languages %}
+                <option value="{{ code }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    
+    <p><strong>Keywords:</strong> {{ keywords|join:", " }}</p>
+    {% if translated_keywords %}
+        <p><strong>Translated Keywords:</strong> {{ translated_keywords|join:", " }}</p>
+    {% endif %}
+    {% endif %}
+
+    <button type="button" onclick="performAction('speak', 'keywords')">Speak Keywords</button>
+
+    <script>
+        function performAction(action, type) {
+            document.getElementById('actionInput').value = action;
+            document.getElementById('translateTypeInput').value = type;
+            document.getElementById('keywordsForm').submit();
+        }
+
+        function speakText(text) {
+            var speech = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.speak(speech);
+        }
+    </script>
+</body>
+</html>

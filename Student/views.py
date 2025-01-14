@@ -195,18 +195,6 @@ def signInUser(request):
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
-
-def upload_file(request):
-    if request.method == 'POST':
-        form = UploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            upload = form.save()  
-            return redirect('file_detail', pk=upload.pk)
-    else:
-        form = UploadForm()
-
-    return render(request, 'upload.html', {'form': form})
-
 model_name = "facebook/m2m100_418M"
 tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 model = M2M100ForConditionalGeneration.from_pretrained(model_name)
@@ -218,65 +206,119 @@ LANGUAGES = [
     ("de", "German"),
     ("it", "Italian"),
     ("hi", "Hindi"),
-    ("zh", "Chinese"),
     ("ml", "Malayalam"),
     ("te", "Telugu"),
     ("ur", "Urdu"),
+    ("ta", "Tamil")
 ]
+
+def upload_file(request):
+    if request.method == 'POST':
+        form = UploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            upload = form.save()
+
+            if upload.summary:  
+                return redirect('summary_detail', pk=upload.pk)
+            elif upload.keywords: 
+                return redirect('keywords_detail', pk=upload.pk)
+            else:
+                return redirect('file_list')  
+    else:
+        form = UploadForm()
+
+    return render(request, 'upload.html', {'form': form})
 
 def translate_with_m2m100(text, target_lang):
     """
     Translate text using M2M-100 model.
     """
-  
     tokenizer.src_lang = "en" 
     encoded_text = tokenizer(text, return_tensors="pt")
     generated_tokens = model.generate(**encoded_text, forced_bos_token_id=tokenizer.get_lang_id(target_lang))
-    return tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
-
-def speak(text):
-    """Convert text to speech."""
-    CoInitialize() 
+    translated_text = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
+    return translated_text
+def speak(text, language="en"):
     try:
-        engine = pyttsx3.init()
-        engine.say(text)
-        engine.runAndWait()
-    finally:
-        CoUninitialize()
+        try:
+            tts = gTTS(text=text, lang=language)
+            tts.save("output.mp3")
+            
+            os.system("mpg321 output.mp3") 
+            print(f"Speaking in {language} using gTTS.")
+        except Exception as e:
+            print(f"gTTS Error: {e}")
+            try:
+                CoInitialize()
+                
+                engine = pyttsx3.init()
+                voices = engine.getProperty('voices')
 
-def file_detail(request, pk):
+                selected_voice = None
+                for voice in voices:
+                    if language in voice.languages:
+                        selected_voice = voice
+                        break
+                
+                if selected_voice:
+                    engine.setProperty('voice', selected_voice.id)
+                else:
+                    print(f"No voice found for language '{language}', using default voice.")
+
+                engine.say(text)
+                engine.runAndWait()
+                print(f"Speaking in {language} using pyttsx3.")
+            except Exception as e:
+                print(f"Error in speech with pyttsx3: {e}")
+            finally:
+                CoUninitialize()
+                
+    except Exception as e:
+        print(f"Error in speech: {e}")
+
+
+def summary_detail(request, pk):
+    upload = get_object_or_404(UploadFile, pk=pk)
+    translated_summary = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        target_lang = request.POST.get('target_lang')
+
+        if action == 'translate' and upload.summary:
+            translated_summary = translate_with_m2m100(upload.summary, target_lang)
+
+        elif action == 'speak':
+            text_to_speak = upload.summary if not translated_summary else translated_summary
+            if text_to_speak:
+                speak(text_to_speak, language=target_lang) 
+
+    return render(request, 'file_summary.html', {
+        'upload': upload,
+        'translated_summary': translated_summary,
+        'languages': LANGUAGES,
+    })
+
+def keywords_detail(request, pk):
     upload = get_object_or_404(UploadFile, pk=pk)
     keywords = upload.keywords.split(',') if upload.keywords else []
-    translated_summary = None
     translated_keywords = None
 
     if request.method == 'POST':
-        action = request.POST.get('action')  # 'speak' or 'translate'
+        action = request.POST.get('action')
         target_lang = request.POST.get('target_lang')
-        translate_type = request.POST.get('translate_type')
 
-        if action == 'translate':
-            # Perform translation
-            if translate_type == 'summary' and upload.summary:
-                translated_summary = translate_with_m2m100(upload.summary, target_lang)
-            elif translate_type == 'keywords' and upload.keywords:
-                translated_keywords = [translate_with_m2m100(kw, target_lang) for kw in keywords]
+        if action == 'translate' and upload.keywords:
+            translated_keywords = [translate_with_m2m100(kw, target_lang) for kw in keywords]
 
         elif action == 'speak':
-            # Speak the content
-            text_to_speak = None
-            if translate_type == 'summary':
-                text_to_speak = upload.summary if not translated_summary else translated_summary
-            elif translate_type == 'keywords':
-                text_to_speak = ", ".join(keywords) if not translated_keywords else ", ".join(translated_keywords)
-
+            text_to_speak = ", ".join(keywords) if not translated_keywords else ", ".join(translated_keywords)
             if text_to_speak:
-                speak(text_to_speak)
+                speak(text_to_speak, language=target_lang)
 
-    return render(request, 'file_detail.html', {
+    return render(request, 'file_keywords.html', {
         'upload': upload,
         'keywords': keywords,
-        'translated_summary': translated_summary,
         'translated_keywords': translated_keywords,
         'languages': LANGUAGES,
     })

@@ -8,41 +8,29 @@
     <h1>Summary Details</h1>
 
     <h2>Summary:</h2>
-    <p>{{ upload.summary }}</p>
+    <p id="summary">{{ upload.summary }}</p>
+    <button onclick="speakText('{% filter escapejs %}{{ upload.summary }}{% endfilter %}')">Speak Summary</button>
 
     {% if translated_summary %}
         <h3>Translated Summary:</h3>
-        <p>{{ translated_summary }}</p>
+        <p id="translated_summary">{{ translated_summary }}</p>
+        <button onclick="speakText('{% filter escapejs %}{{ translated_summary }}{% endfilter %}')">Speak Translated Summary</button>
     {% else %}
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" name="action" value="translate">Translate</button>
-        <button type="submit" name="action" value="speak">Speak</button>
-    
-        <select name="target_lang">
-            {% for code, name in languages %}
-                <option value="{{ code }}">{{ name }}</option>
-            {% endfor %}
-        </select>
-    </form>
-    
-    <p>{{ upload.summary }}</p>
-    {% if translated_summary %}
-        <p><strong>Translated Summary:</strong> {{ translated_summary }}</p>
-    {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="action" value="translate">Translate</button>
+            <select name="target_lang">
+                {% for code, name in languages %}
+                    <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </form>
     {% endif %}
 
-    <button type="button" onclick="performAction('speak', 'summary')">Speak Summary</button>
-    
     <script>
-        function performAction(action, type) {
-            document.getElementById('actionInput').value = action;
-            document.getElementById('translateTypeInput').value = type;
-            document.getElementById('summaryForm').submit();
-        }
-
         function speakText(text) {
-            var speech = new SpeechSynthesisUtterance(text);
+            console.log("Speaking text:", text); 
+            const speech = new SpeechSynthesisUtterance(text);
             window.speechSynthesis.speak(speech);
         }
     </script>

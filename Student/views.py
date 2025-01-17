@@ -18,6 +18,7 @@ from gtts import gTTS
 import os
 import pyttsx3
 from comtypes import CoInitialize, CoUninitialize
+from django.conf import settings
 @csrf_exempt
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
 def loginUser(request):
@@ -240,42 +241,34 @@ def translate_with_m2m100(text, target_lang):
     return translated_text
 def speak(text, language="en"):
     try:
-        try:
-            tts = gTTS(text=text, lang=language)
-            tts.save("output.mp3")
-            
-            os.system("mpg321 output.mp3") 
-            print(f"Speaking in {language} using gTTS.")
-        except Exception as e:
-            print(f"gTTS Error: {e}")
+        # Ensure the audio directory exists
+        audio_dir = os.path.join(settings.MEDIA_ROOT, 'audio')
+        os.makedirs(audio_dir, exist_ok=True)
+        
+        # Generate a unique filename
+        audio_file = os.path.join(audio_dir, f"{hash(text)}_{language}.mp3")
+        
+        if not os.path.exists(audio_file):  # Avoid regenerating the same file
             try:
-                CoInitialize()
-                
-                engine = pyttsx3.init()
-                voices = engine.getProperty('voices')
-
-                selected_voice = None
-                for voice in voices:
-                    if language in voice.languages:
-                        selected_voice = voice
-                        break
-                
-                if selected_voice:
-                    engine.setProperty('voice', selected_voice.id)
-                else:
-                    print(f"No voice found for language '{language}', using default voice.")
-
-                engine.say(text)
-                engine.runAndWait()
-                print(f"Speaking in {language} using pyttsx3.")
+                # Use gTTS for speech generation
+                tts = gTTS(text=text, lang=language)
+                tts.save(audio_file)
+                print(f"Audio file saved: {audio_file}")
             except Exception as e:
-                print(f"Error in speech with pyttsx3: {e}")
-            finally:
-                CoUninitialize()
-                
+                print(f"gTTS Error: {e}, falling back to pyttsx3.")
+                try:
+                    # Use pyttsx3 as a fallback
+                    engine = pyttsx3.init()
+                    engine.save_to_file(text, audio_file)
+                    engine.runAndWait()
+                    print(f"Audio file saved with pyttsx3: {audio_file}")
+                except Exception as e:
+                    print(f"pyttsx3 Error: {e}")
+        
+        return audio_file  # Return the file path for playback
     except Exception as e:
-        print(f"Error in speech: {e}")
-
+        print(f"Error in speech generation: {e}")
+        return None
 
 def summary_detail(request, pk):
     upload = get_object_or_404(UploadFile, pk=pk)

@@ -21,37 +21,20 @@
                 <li>{{ translated_keyword }}</li>
             {% endfor %}
         </ul>
-    {% else %}
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" name="action" value="translate">Translate</button>
-        <button type="submit" name="action" value="speak">Speak</button>
-    
-        <select name="target_lang">
-            {% for code, name in languages %}
-                <option value="{{ code }}">{{ name }}</option>
-            {% endfor %}
-        </select>
-    </form>
-    
-    <p><strong>Keywords:</strong> {{ keywords|join:", " }}</p>
-    {% if translated_keywords %}
-        <p><strong>Translated Keywords:</strong> {{ translated_keywords|join:", " }}</p>
-    {% endif %}
+        <button onclick="speakText('{{ translated_keywords|join:','}}')">Speak Translated Keywords</button>
     {% endif %}
 
-    <button type="button" onclick="performAction('speak', 'keywords')">Speak Keywords</button>
+    <button onclick="speakText('{{ keywords|join:',' }}')">Speak Keywords</button>
 
     <script>
-        function performAction(action, type) {
-            document.getElementById('actionInput').value = action;
-            document.getElementById('translateTypeInput').value = type;
-            document.getElementById('keywordsForm').submit();
-        }
-
         function speakText(text) {
-            var speech = new SpeechSynthesisUtterance(text);
-            window.speechSynthesis.speak(speech);
+            console.log("Text to speak:", text); // Debugging
+            if (text) {
+                const speech = new SpeechSynthesisUtterance(text);
+                window.speechSynthesis.speak(speech);
+            } else {
+                console.error("No text provided to speak!");
+            }
         }
     </script>
 </body>

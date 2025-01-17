@@ -99,11 +99,9 @@ MARK_TYPE = [
     ('percentage', 'Percentage'),
     ('cgpa', 'CGPA'),
 ]
-class Home(models.Model):
-    student_name = models.OneToOneField(LoginForm,null=True,on_delete=models.CASCADE,related_name='Login_student')
-    college_name = models.CharField(null=False,max_length=100)
 
 class Home(models.Model):
+    student_name = models.OneToOneField(LoginForm,null=True,on_delete=models.CASCADE,related_name='Login_student')
     college_name = models.CharField(max_length=100)
     course = models.CharField(null=False, max_length=30)
     year = models.CharField(choices=YEAR, max_length=2) 
@@ -273,3 +271,17 @@ class UploadFile(models.Model):
         for paragraph in doc.paragraphs:
             text += paragraph.text + "\n"
         return self.generate_summary_from_text(text, num_sentences)
+
+class Feedback(models.Model):
+    FEEDBACK_CHOICES = [
+        ('summary', 'Summary'),
+        ('keywords', 'Keywords'),
+    ]
+
+    text = models.TextField()  # Feedback text
+    category = models.CharField(max_length=20, choices=FEEDBACK_CHOICES)  # Whether the feedback is for summary or keywords
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(LoginForm, on_delete=models.CASCADE, related_name="feedbacks")  # One-to-many relationship
+    
+    def __str__(self):
+        return f"Feedback for {self.category} by {self.user.name}"

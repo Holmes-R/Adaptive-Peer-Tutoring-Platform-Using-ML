@@ -21,20 +21,51 @@
                 <li>{{ translated_keyword }}</li>
             {% endfor %}
         </ul>
-        <button onclick="speakText('{{ translated_keywords|join:','}}')">Speak Translated Keywords</button>
+        <button onclick="speakText('{{ translated_keywords|join:',' }}')">Speak Translated Keywords</button>
+        
+        <!-- Feedback form for translated keywords -->
+        <h3>Your Feedback on Keywords:</h3>
+        <form id="feedback-form-keywords" method="post" action="{% url 'submit_feedback_keywords' %}">
+            {% csrf_token %}
+            <textarea name="feedback" rows="4" cols="50" placeholder="Please provide your feedback here..."></textarea><br><br>
+            <button type="submit">Submit Feedback</button>
+        </form>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" name="action" value="translate">Translate</button>
+            <select name="target_lang">
+                {% for code, name in languages %}
+                    <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </form>
     {% endif %}
 
-    <button onclick="speakText('{{ keywords|join:',' }}')">Speak Keywords</button>
+    <button onclick="generatePDF()">Download PDF</button>
 
     <script>
         function speakText(text) {
-            console.log("Text to speak:", text); // Debugging
+            console.log("Text to speak:", text); 
             if (text) {
                 const speech = new SpeechSynthesisUtterance(text);
                 window.speechSynthesis.speak(speech);
-            } else {
-                console.error("No text provided to speak!");
             }
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const keywordsList = document.querySelector("ul").innerText;
+            const translatedKeywordsList = document.querySelector("ul") ? document.querySelector("ul").innerText : "No translation available.";
+
+            // Adding content to PDF
+            doc.text("Keywords: " + keywordsList, 10, 10);
+            doc.text("Translated Keywords: " + translatedKeywordsList, 10, 20);
+
+            // Save the PDF
+            doc.save("Keywords_Details.pdf");
         }
     </script>
 </body>

@@ -19,6 +19,11 @@ import os
 import pyttsx3
 from comtypes import CoInitialize, CoUninitialize
 from django.conf import settings
+from .models import Feedback, LoginForm
+from django.contrib.auth.decorators import login_required
+
+
+
 @csrf_exempt
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
 def loginUser(request):
@@ -318,3 +323,31 @@ def keywords_detail(request, pk):
 def file_list(request):
     files = UploadFile.objects.all()
     return render(request, 'file_list.html', {'files': files})
+
+@login_required
+def submit_feedback_summary(request):
+    if request.method == "POST":
+        feedback_text = request.POST.get('feedback')
+        user = request.user  # Assuming the user is logged in
+
+        # Save feedback for summary category
+        feedback = Feedback(text=feedback_text, category="summary", user=user)
+        feedback.save()
+
+        return redirect('thank_you')  # Redirect to a thank you page or confirmation
+
+    return render(request, 'files_summary.html')
+
+@login_required
+def submit_feedback_keywords(request):
+    if request.method == "POST":
+        feedback_text = request.POST.get('feedback')
+        user = request.user  # Assuming the user is logged in
+
+        # Save feedback for keywords category
+        feedback = Feedback(text=feedback_text, category="keywords", user=user)
+        feedback.save()
+
+        return redirect('thank_you')  # Redirect to a thank you page or confirmation
+
+    return render(request, 'files_keyword.html')

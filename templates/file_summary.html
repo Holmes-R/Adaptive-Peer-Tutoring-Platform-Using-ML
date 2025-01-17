@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Summary Details</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <h1>Summary Details</h1>
@@ -15,6 +16,14 @@
         <h3>Translated Summary:</h3>
         <p id="translated_summary">{{ translated_summary }}</p>
         <button onclick="speakText('{% filter escapejs %}{{ translated_summary }}{% endfilter %}')">Speak Translated Summary</button>
+        
+        <!-- Feedback form for translated summary -->
+        <h3>Your Feedback on Summary:</h3>
+        <form id="feedback-form-summary" method="post" action="{% url 'submit_feedback_summary' %}">
+            {% csrf_token %}
+            <textarea name="feedback" rows="4" cols="50" placeholder="Please provide your feedback here..."></textarea><br><br>
+            <button type="submit">Submit Feedback</button>
+        </form>
     {% else %}
         <form method="post">
             {% csrf_token %}
@@ -27,11 +36,28 @@
         </form>
     {% endif %}
 
+    <button onclick="generatePDF()">Download PDF</button>
+
     <script>
         function speakText(text) {
             console.log("Speaking text:", text); 
             const speech = new SpeechSynthesisUtterance(text);
             window.speechSynthesis.speak(speech);
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const originalSummary = document.getElementById("summary").innerText;
+            const translatedSummary = document.getElementById("translated_summary") ? document.getElementById("translated_summary").innerText : "No translation available.";
+
+            // Adding content to PDF
+            doc.text("Original Summary: " + originalSummary, 10, 10);
+            doc.text("Translated Summary: " + translatedSummary, 10, 20);
+
+            // Save the PDF
+            doc.save("Feedback_Summary.pdf");
         }
     </script>
 </body>

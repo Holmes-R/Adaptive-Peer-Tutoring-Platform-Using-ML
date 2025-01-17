@@ -17,7 +17,7 @@ import nltk
 from nltk.tokenize import PunktSentenceTokenizer
 from sumy.nlp.tokenizers import Tokenizer
 from django.conf import settings
-# Create your models here
+
 
 """
     Login New Student
@@ -278,10 +278,10 @@ class Feedback(models.Model):
         ('keywords', 'Keywords'),
     ]
 
-    text = models.TextField()  # Feedback text
-    category = models.CharField(max_length=20, choices=FEEDBACK_CHOICES)  # Whether the feedback is for summary or keywords
+    text = models.TextField() 
+    category = models.CharField(max_length=20, choices=FEEDBACK_CHOICES) 
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(LoginForm, on_delete=models.CASCADE, related_name="feedbacks")  # One-to-many relationship
+    user = models.ForeignKey(LoginForm, on_delete=models.CASCADE, related_name="feedbacks")  
     
     def __str__(self):
         return f"Feedback for {self.category} by {self.user.name}"

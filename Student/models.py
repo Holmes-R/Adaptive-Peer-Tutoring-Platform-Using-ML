@@ -17,7 +17,7 @@ import nltk
 from nltk.tokenize import PunktSentenceTokenizer
 from sumy.nlp.tokenizers import Tokenizer
 from django.conf import settings
-
+from django.utils import timezone
 
 """
     Login New Student
@@ -285,3 +285,26 @@ class Feedback(models.Model):
     
     def __str__(self):
         return f"Feedback for {self.category} by {self.user.name}"
+
+class UserActivity(models.Model):
+    ACTION_CHOICES = [
+        ('login', 'Login'),
+        ('logout', 'Logout'),
+        ('file_upload', 'File Upload'),
+        ('file_view', 'File View'),
+        ('file_translate', 'File Translate'),
+        ('file_speak', 'File Speak'),
+        ('feedback', 'Feedback'),
+        ('otp_verified', 'OTP Verified'),
+    ]
+    
+    user = models.ForeignKey(Home, on_delete=models.CASCADE, related_name="user_activities")
+    action = models.CharField(max_length=50, choices=ACTION_CHOICES)
+    timestamp = models.DateTimeField(default=timezone.now)
+    details = models.TextField(null=True, blank=True)  
+
+    def __str__(self):
+        return f"{self.user.name} - {self.get_action_display()} at {self.timestamp}"
+
+    class Meta:
+        verbose_name_plural = 'User Activities'

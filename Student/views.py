@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login
 from django.db import IntegrityError
 from django.http import JsonResponse
-from .models import LoginForm ,Home ,StudentID ,UploadFile
+from .models import LoginForm ,Home ,StudentID ,UploadFile,UserActivity
 from .forms import UploadForm
 from django.shortcuts import get_object_or_404 , redirect , render
 from django.views.decorators.csrf import csrf_exempt
@@ -23,6 +23,7 @@ from .models import Feedback, LoginForm
 from django.contrib.auth.decorators import login_required
 
 
+logger = logging.getLogger(__name__)    
 
 @csrf_exempt
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
@@ -39,6 +40,7 @@ def loginUser(request):
         confirm_password = data.get('confirm_password')
 
         if not all([name, email, password, confirm_password]):
+            logger.warning(f"Missing fields during registration by {email}")
             return JsonResponse({"error": "All fields are required."}, status=400)
 
         if password != confirm_password:
@@ -46,7 +48,10 @@ def loginUser(request):
 
         user, created = LoginForm.objects.get_or_create(email=email)
         if not created:
+            logger.info(f"Existing user logged in: {email}")
             return JsonResponse({"error": "User with this email already exists."}, status=400)
+        else:
+            logger.info(f"New user created: {email}")
 
         user.name = name
         user.user_password = password
@@ -60,6 +65,12 @@ def loginUser(request):
             django_user = User.objects.create_user(username=email, email=email, password=password)
             django_user.save()
             auth_login(request, django_user)
+
+        UserActivity.objects.create(
+            user=user, 
+            action='login' if created else 'file_upload',  # Can use a more specific action
+            details=f"User {'registered' if created else 'logged in'} successfully."
+        )
 
         user.generate_otp()
 
@@ -77,6 +88,7 @@ def verify_otp(request, email):
             data = json.loads(request.body)
             user_otp = data.get('user_otp')
         except json.JSONDecodeError:
+            logger.warning(f"Invalid JSON format attempt during OTP verification by {email}")
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
         if not user_otp:
@@ -90,6 +102,7 @@ def verify_otp(request, email):
         logger.debug(f"Generated OTP: {user.generated_otp}")
         
         if user.generated_otp == str(user_otp):
+            logger.info(f"OTP verified successfully for {email}")
             if user.otp_expiry and timezone.now() <= user.otp_expiry:
                 user.user_otp = user_otp  
                 user.save()
@@ -223,13 +236,20 @@ def upload_file(request):
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
             upload = form.save()
-
+            logger.info(f"File uploaded by {request.user.username}, file name: {upload.file.name}")
+            UserActivity.objects.create(
+                user=request.user, 
+                action='file_upload',
+                details=f"File uploaded: {upload.file.name}"
+            )
             if upload.summary:  
                 return redirect('summary_detail', pk=upload.pk)
             elif upload.keywords: 
                 return redirect('keywords_detail', pk=upload.pk)
             else:
-                return redirect('file_list')  
+                return redirect('file_list')
+        else:
+            logger.warning(f"Invalid file upload attempt by {request.user.username}")  
     else:
         form = UploadForm()
 
@@ -284,9 +304,11 @@ def summary_detail(request, pk):
         target_lang = request.POST.get('target_lang')
 
         if action == 'translate' and upload.summary:
+            logger.info(f"User {request.user.username} requested translation for summary to {target_lang}")
             translated_summary = translate_with_m2m100(upload.summary, target_lang)
 
         elif action == 'speak':
+            logger.info(f"User {request.user.username} requested speech for summary in {target_lang}")
             text_to_speak = upload.summary if not translated_summary else translated_summary
             if text_to_speak:
                 speak(text_to_speak, language=target_lang) 
@@ -324,30 +346,31 @@ def file_list(request):
     files = UploadFile.objects.all()
     return render(request, 'file_list.html', {'files': files})
 
-@login_required
 def submit_feedback_summary(request):
     if request.method == "POST":
         feedback_text = request.POST.get('feedback')
-        user = request.user  # Assuming the user is logged in
-
-        # Save feedback for summary category
+        user = request.user  
         feedback = Feedback(text=feedback_text, category="summary", user=user)
         feedback.save()
-
-        return redirect('thank_you')  # Redirect to a thank you page or confirmation
+        logger.info(f"Feedback submitted by {user.username} on summary.")
+        UserActivity.objects.create(
+            user=user, 
+            action='feedback',
+            details=f"Feedback submitted on summary: {feedback_text[:50]}..."  # First 50 chars
+        )
+        return redirect('thank_you')  
 
     return render(request, 'files_summary.html')
 
-@login_required
 def submit_feedback_keywords(request):
     if request.method == "POST":
         feedback_text = request.POST.get('feedback')
-        user = request.user  # Assuming the user is logged in
+        user = request.user 
 
-        # Save feedback for keywords category
         feedback = Feedback(text=feedback_text, category="keywords", user=user)
-        feedback.save()
+        feedback.save() 
+        logger.info(f"Feedback submitted by {user.username} on keywords.")
 
-        return redirect('thank_you')  # Redirect to a thank you page or confirmation
+        return redirect('thank_you') 
 
     return render(request, 'files_keyword.html')

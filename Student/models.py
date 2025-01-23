@@ -298,7 +298,7 @@ class UserActivity(models.Model):
         ('otp_verified', 'OTP Verified'),
     ]
     
-    user = models.ForeignKey(Home, on_delete=models.CASCADE, related_name="user_activities")
+    user = models.ForeignKey(Home, on_delete=models.CASCADE, related_name="user_activities",null=True, blank=True)
     action = models.CharField(max_length=50, choices=ACTION_CHOICES)
     timestamp = models.DateTimeField(default=timezone.now)
     details = models.TextField(null=True, blank=True)  

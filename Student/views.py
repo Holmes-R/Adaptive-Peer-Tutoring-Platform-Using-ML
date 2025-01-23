@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login
 from django.db import IntegrityError
 from django.http import JsonResponse
+from translate import Translator
 from .models import LoginForm ,Home ,StudentID ,UploadFile,UserActivity
 from .forms import UploadForm
 from django.shortcuts import get_object_or_404 , redirect , render
@@ -23,7 +24,6 @@ from .models import Feedback, LoginForm
 from django.contrib.auth.decorators import login_required
 
 
-logger = logging.getLogger(__name__)    
 
 @csrf_exempt
 @throttle_classes([AnonRateThrottle, UserRateThrottle])
@@ -40,7 +40,6 @@ def loginUser(request):
         confirm_password = data.get('confirm_password')
 
         if not all([name, email, password, confirm_password]):
-            logger.warning(f"Missing fields during registration by {email}")
             return JsonResponse({"error": "All fields are required."}, status=400)
 
         if password != confirm_password:
@@ -48,10 +47,7 @@ def loginUser(request):
 
         user, created = LoginForm.objects.get_or_create(email=email)
         if not created:
-            logger.info(f"Existing user logged in: {email}")
             return JsonResponse({"error": "User with this email already exists."}, status=400)
-        else:
-            logger.info(f"New user created: {email}")
 
         user.name = name
         user.user_password = password
@@ -66,12 +62,7 @@ def loginUser(request):
             django_user.save()
             auth_login(request, django_user)
 
-        UserActivity.objects.create(
-            user=user, 
-            action='login' if created else 'file_upload',  # Can use a more specific action
-            details=f"User {'registered' if created else 'logged in'} successfully."
-        )
-
+        
         user.generate_otp()
 
         return JsonResponse({"message": "User created and logged in successfully. OTP sent to email."}, status=200)
@@ -79,7 +70,6 @@ def loginUser(request):
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
 
-logger = logging.getLogger(__name__)
 @csrf_exempt
 def verify_otp(request, email):
     if request.method == 'POST':
@@ -88,30 +78,23 @@ def verify_otp(request, email):
             data = json.loads(request.body)
             user_otp = data.get('user_otp')
         except json.JSONDecodeError:
-            logger.warning(f"Invalid JSON format attempt during OTP verification by {email}")
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
         if not user_otp:
-            logger.error("OTP not provided in the request.")
             return JsonResponse({"error": "OTP is required."}, status=400)
 
-        logger.debug(f"User OTP received: {user_otp}")
         
         user = get_object_or_404(LoginForm, email=email)
 
-        logger.debug(f"Generated OTP: {user.generated_otp}")
         
         if user.generated_otp == str(user_otp):
-            logger.info(f"OTP verified successfully for {email}")
             if user.otp_expiry and timezone.now() <= user.otp_expiry:
                 user.user_otp = user_otp  
                 user.save()
                 return JsonResponse({"message": "OTP verified successfully."}, status=200)
             else:
-                logger.debug("OTP expired.")
                 return JsonResponse({"error": "OTP has expired."}, status=400)
         else:
-            logger.debug("OTP does not match.")
             return JsonResponse({"error": "Invalid OTP."}, status=400)
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
@@ -213,11 +196,11 @@ def signInUser(request):
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
-
 model_name = "facebook/m2m100_418M"
 tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 model = M2M100ForConditionalGeneration.from_pretrained(model_name)
 
+# Supported languages
 LANGUAGES = [
     ("en", "English"),
     ("fr", "French"),
@@ -227,43 +210,63 @@ LANGUAGES = [
     ("hi", "Hindi"),
     ("ml", "Malayalam"),
     ("te", "Telugu"),
-    ("ur", "Urdu"),
-    ("ta", "Tamil")
+    ("ta", "Tamil"),
 ]
 
+def translate_text(text, target_lang):
+    """
+    Translate text using `translate` library for Tamil, Telugu, and Malayalam,
+    and M2M-100 for other international languages.
+    """
+    if target_lang in ['ta', 'te', 'ml']:  # Tamil, Telugu, Malayalam
+        return translate_with_other_method(text, target_lang)
+    else:
+        return translate_with_m2m100(text, target_lang)
+
+def translate_with_m2m100(text, target_lang):
+    """
+    Translate text using the M2M-100 model.
+    """
+    tokenizer.src_lang = "en"  # Assuming source language is English
+    encoded_text = tokenizer(text, return_tensors="pt")
+    generated_tokens = model.generate(
+        **encoded_text,
+        forced_bos_token_id=tokenizer.get_lang_id(target_lang)
+    )
+    translated_text = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
+    return translated_text
+
+def translate_with_other_method(text, target_lang):
+    """
+    Translate text for Tamil, Telugu, and Malayalam using the `translate` library.
+    """
+    lang_mapping = {
+        'ta': 'ta',  # Tamil
+        'te': 'te',  # Telugu
+        'ml': 'ml',  # Malayalam
+    }
+    translator = Translator(to_lang=lang_mapping.get(target_lang, "en"))
+    return translator.translate(text)
+
+# Example Usage
+# Assuming `text` is the input and `target_lang` is the selected language code.
 def upload_file(request):
     if request.method == 'POST':
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
             upload = form.save()
-            logger.info(f"File uploaded by {request.user.username}, file name: {upload.file.name}")
-            UserActivity.objects.create(
-                user=request.user, 
-                action='file_upload',
-                details=f"File uploaded: {upload.file.name}"
-            )
-            if upload.summary:  
+
+            if upload.summary:
                 return redirect('summary_detail', pk=upload.pk)
-            elif upload.keywords: 
+            elif upload.keywords:
                 return redirect('keywords_detail', pk=upload.pk)
             else:
                 return redirect('file_list')
-        else:
-            logger.warning(f"Invalid file upload attempt by {request.user.username}")  
     else:
         form = UploadForm()
 
     return render(request, 'upload.html', {'form': form})
 
-def translate_with_m2m100(text, target_lang):
-    """
-    Translate text using M2M-100 model.
-    """
-    tokenizer.src_lang = "en" 
-    encoded_text = tokenizer(text, return_tensors="pt")
-    generated_tokens = model.generate(**encoded_text, forced_bos_token_id=tokenizer.get_lang_id(target_lang))
-    translated_text = tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
-    return translated_text
 def speak(text, language="en"):
     try:
         # Ensure the audio directory exists
@@ -304,11 +307,9 @@ def summary_detail(request, pk):
         target_lang = request.POST.get('target_lang')
 
         if action == 'translate' and upload.summary:
-            logger.info(f"User {request.user.username} requested translation for summary to {target_lang}")
             translated_summary = translate_with_m2m100(upload.summary, target_lang)
 
         elif action == 'speak':
-            logger.info(f"User {request.user.username} requested speech for summary in {target_lang}")
             text_to_speak = upload.summary if not translated_summary else translated_summary
             if text_to_speak:
                 speak(text_to_speak, language=target_lang) 
@@ -352,12 +353,7 @@ def submit_feedback_summary(request):
         user = request.user  
         feedback = Feedback(text=feedback_text, category="summary", user=user)
         feedback.save()
-        logger.info(f"Feedback submitted by {user.username} on summary.")
-        UserActivity.objects.create(
-            user=user, 
-            action='feedback',
-            details=f"Feedback submitted on summary: {feedback_text[:50]}..."  # First 50 chars
-        )
+        
         return redirect('thank_you')  
 
     return render(request, 'files_summary.html')
@@ -369,7 +365,6 @@ def submit_feedback_keywords(request):
 
         feedback = Feedback(text=feedback_text, category="keywords", user=user)
         feedback.save() 
-        logger.info(f"Feedback submitted by {user.username} on keywords.")
 
         return redirect('thank_you') 
 

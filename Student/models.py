@@ -42,13 +42,12 @@ class LoginForm(models.Model):
 
     class Meta:
         verbose_name_plural = 'Sign-Up Student Account' 
-        verbose_name_plural = 'Login Students'
 
         
     def generate_otp(self):
     
         self.generated_otp = str(random.randint(100000, 999999))
-        self.otp_expiry = datetime.now() + timedelta(minutes=5)  
+        self.otp_expiry =  timezone.now() + timedelta(minutes=5)  
         self.save()
 
         self.send_otp_email()
@@ -65,6 +64,10 @@ class LoginForm(models.Model):
             [self.email],
             fail_silently=False,
         )
+    def is_otp_valid(self, otp):
+        if self.otp == otp and self.otp_expiry and self.otp_expiry > timezone.now():
+            return True
+        return False
     def set_password(self, password):
         """Hashes and stores the password securely."""
         from django.contrib.auth.hashers import make_password
@@ -134,11 +137,11 @@ class Home(models.Model):
     Sign-In Existing Student Account
 """
 class StudentID(models.Model):
-    student = models.OneToOneField(LoginForm,on_delete=models.CASCADE,related_name='student_name')
-    unique_id = models.CharField(max_length=4,unique=True,editable=False)
+    student = models.OneToOneField(LoginForm, on_delete=models.CASCADE, related_name='student_name')
+    unique_id = models.CharField(max_length=4, unique=True, editable=False)
     password = models.CharField(max_length=8)
 
-    def save(self,*args,**kwargs):
+    def save(self, *args, **kwargs):
         if not self.unique_id:
             while True:
                 random_id = str(random.randint(1000, 9999))
@@ -151,12 +154,12 @@ class StudentID(models.Model):
     def generate_unique_student_id():
         while True:
             random_id = get_random_string(length=4, allowed_chars='0123456789')
-            if not StudentID.objects.filter(student_id=random_id).exists():
+            if not StudentID.objects.filter(unique_id=random_id).exists():
                 return random_id
-            
+
     def __str__(self):
         return f"StudentID: {self.unique_id} - {self.student.name}"
-            
+
     class Meta:
         verbose_name_plural = 'Sign-In Student Account'
 
@@ -202,32 +205,45 @@ class UploadFile(models.Model):
         return ' '.join([str(sentence) for sentence in summary])
 
     def convert_pptx_to_pdf(self):
-        pptx_path = os.path.join(settings.MEDIA_ROOT, 'documents', os.path.basename(self.upload_file.name))
+        pptx_path = self.upload_file.path  # Use the actual file path
         pdf_dir = os.path.dirname(pptx_path)
-        pdf_path = None
+        pdf_path = pptx_path.replace('.pptx', '.pdf')
+        
         try:
             pythoncom.CoInitialize()
-            print(f"File path for conversion: {self.upload_file.path}")
+            print(f"Converting .pptx file: {pptx_path}")
 
+            # Convert the .pptx file to .pdf
             convert(pptx_path, pdf_dir)
-            pdf_path = pptx_path.replace('.pptx', '.pdf')
+
+            # Verify if the .pdf file exists after conversion
             if os.path.exists(pdf_path):
+                print(f"Conversion successful: {pdf_path}")
                 self.upload_file.name = self.upload_file.name.replace('.pptx', '.pdf')
-                self.upload_file.save()
+            else:
+                print("Conversion failed: PDF file not found.")
         except Exception as e:
             print(f"Error converting .pptx to .pdf: {e}")
         finally:
             pythoncom.CoUninitialize()
 
+
     def process_file(self):
         file_path = self.upload_file.path
-        print(f"Processing file: {file_path}")  
+        print(f"Processing file: {file_path}")
+
+        if file_path.endswith('.pptx'):
+            print("File is a .pptx. Attempting to convert to .pdf.")
+            self.convert_pptx_to_pdf()
+            file_path = file_path.replace('.pptx', '.pdf')
+
         if self.student_options == 'Keywords':
             if file_path.endswith('.pdf'):
                 self.keywords = self.extract_keywords_from_pdf(file_path)
             elif file_path.endswith('.docx'):
                 self.keywords = self.extract_keywords_from_docx(file_path)
             self.__class__.objects.filter(id=self.id).update(keywords=self.keywords)
+
         elif self.student_options == 'Summary':
             if file_path.endswith('.pdf'):
                 self.summary = self.generate_summary_from_pdf(file_path)

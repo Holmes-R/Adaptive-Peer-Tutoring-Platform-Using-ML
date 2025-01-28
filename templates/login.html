@@ -3,82 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f9;
-        }
-        .form-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        .form-container h1 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #555;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .form-group input:focus {
-            border-color: #007bff;
-            outline: none;
-        }
-        .form-group button {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .form-group button:hover {
-            background-color: #0056b3;
-        }
-        .error {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-    </style>
+    <title>Login and OTP Verification</title>
 </head>
 <body>
-    <div class="form-container">
-        <h1>Login</h1>
-        <form method="POST" action="{% url 'login' %}">
-            {% csrf_token %}
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-            <button type="submit">Login</button>
+    <h2>Login Page</h2>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" required><br><br>
+
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" required><br><br>
+
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required><br><br>
+
+        <label for="confirmPassword">Confirm Password:</label><br>
+        <input type="password" id="confirmPassword" name="confirmPassword" required><br><br>
+
+        <button type="button" onclick="sendOtp()">Send OTP</button>
+    </form>
+
+    <!-- OTP Section (Hidden Initially) -->
+    <div id="otpSection" style="display: none;">
+        <h3>Verify OTP</h3>
+        <form id="otpForm">
+            <label for="otp">Enter OTP:</label><br>
+            <input type="text" id="otp" name="otp" required><br><br>
+            <button type="button" onclick="verifyOtp()">Verify OTP</button>
         </form>
     </div>
+
+    <script>
+        // Function to send OTP
+        async function sendOtp() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            const response = await fetch('/loginUser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    email,
+                    user_password: password,
+                    confirm_password: confirmPassword
+                })
+            });
+
+            const result = await response.json();
+            alert(result.message || result.error);
+
+            if (response.ok) {
+                // Hide login form and show OTP section
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('otpSection').style.display = 'block';
+            }
+        }
+
+        // Function to verify OTP
+        async function verifyOtp() {
+            const email = document.getElementById('email').value;
+            const otp = document.getElementById('otp').value;
+
+            const response = await fetch(`/verify_otp/${email}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_otp: otp })
+            });
+
+            const result = await response.json();
+            alert(result.message || result.error);
+
+            if (response.ok) {
+                // Redirect to student information page on successful verification
+                window.location.href = '/student_information';
+            }
+        }
+    </script>
 </body>
 </html>

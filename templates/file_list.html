@@ -18,7 +18,7 @@
             <tr>
                 <td>{{ file.upload_file.name }}</td>
                 <td>{{ file.uploaded_at }}</td>
-                <td><a href="{% url 'file_detail' pk=file.pk %}">View Details</a></td>
+                <td><a href="{% url 'files' pk=file.pk %}">View Details</a></td>
             </tr>
             {% endfor %}
         </tbody>

@@ -23,11 +23,11 @@ from django.conf import settings
 from .models import Feedback, LoginForm
 from django.contrib.auth.decorators import login_required
 
-
-
 @csrf_exempt
-@throttle_classes([AnonRateThrottle, UserRateThrottle])
 def loginUser(request):
+    if request.method == 'GET':
+        return render(request, 'login.html')
+
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -54,7 +54,7 @@ def loginUser(request):
         user.confirm_password = confirm_password
         user.save()
 
-        django_user = User.objects.filter(email=email).first() 
+        django_user = User.objects.filter(email=email).first()
         if django_user:
             auth_login(request, django_user)
         else:
@@ -62,7 +62,6 @@ def loginUser(request):
             django_user.save()
             auth_login(request, django_user)
 
-        
         user.generate_otp()
 
         return JsonResponse({"message": "User created and logged in successfully. OTP sent to email."}, status=200)
@@ -74,8 +73,7 @@ def loginUser(request):
 def verify_otp(request, email):
     if request.method == 'POST':
         try:
-
-            data = json.loads(request.body)
+            data = json.loads(request.body)  # Parse the OTP sent from frontend
             user_otp = data.get('user_otp')
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
@@ -83,21 +81,31 @@ def verify_otp(request, email):
         if not user_otp:
             return JsonResponse({"error": "OTP is required."}, status=400)
 
-        
+        # Fetch the user by email
         user = get_object_or_404(LoginForm, email=email)
 
-        
+        # Verify OTP validity
         if user.generated_otp == str(user_otp):
             if user.otp_expiry and timezone.now() <= user.otp_expiry:
-                user.user_otp = user_otp  
+                user.user_otp = user_otp  # Save the OTP for record
                 user.save()
-                return JsonResponse({"message": "OTP verified successfully."}, status=200)
+
+                # Check if StudentID exists, if not, create one
+                student_id = StudentID.objects.filter(student=user).first()
+                if not student_id:
+                    student_id = StudentID(student=user, password=user.user_password)
+                    student_id.save()
+
+                return JsonResponse({
+                    "message": f"OTP verified successfully. Your unique ID is {student_id.unique_id}."
+                }, status=200)
             else:
                 return JsonResponse({"error": "OTP has expired."}, status=400)
         else:
             return JsonResponse({"error": "Invalid OTP."}, status=400)
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
 
 @csrf_exempt
 def getInformation(request):
@@ -177,40 +185,37 @@ def signInUser(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            unique_id = data.get('unique_id') 
+            unique_id = data.get('unique_id')
             password = data.get('password')
-
-            if not unique_id or not password:
-                return JsonResponse({"error": "Unique ID and password are required."}, status=400)
-
-            try:
-                student_id_instance = StudentID.objects.get(unique_id=unique_id) 
-                if student_id_instance.password == password:  
-                    return JsonResponse({"message": "Sign in successful!"}, status=200)
-                else:
-                    return JsonResponse({"error": "Invalid password."}, status=401)
-            except StudentID.DoesNotExist:
-                return JsonResponse({"error": "Unique ID does not exist."}, status=404)
-
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
+        if not unique_id or not password:
+            return JsonResponse({"error": "Both Unique ID and Password are required."}, status=400)
+
+        student_id = StudentID.objects.filter(unique_id=unique_id).first()
+
+        if not student_id:
+            return JsonResponse({"error": "Invalid Unique ID."}, status=400)
+
+        if student_id.password == password:
+            return JsonResponse({"message": "Login successful."}, status=200)
+        else:
+            return JsonResponse({"error": "Invalid password."}, status=400)
+
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
 model_name = "facebook/m2m100_418M"
 tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 model = M2M100ForConditionalGeneration.from_pretrained(model_name)
 
-# Supported languages
 LANGUAGES = [
     ("en", "English"),
     ("fr", "French"),
     ("es", "Spanish"),
     ("de", "German"),
     ("it", "Italian"),
-    ("hi", "Hindi"),
-    ("ml", "Malayalam"),
-    ("te", "Telugu"),
-    ("ta", "Tamil"),
+    
 ]
 
 def translate_text(text, target_lang):
@@ -248,8 +253,6 @@ def translate_with_other_method(text, target_lang):
     translator = Translator(to_lang=lang_mapping.get(target_lang, "en"))
     return translator.translate(text)
 
-# Example Usage
-# Assuming `text` is the input and `target_lang` is the selected language code.
 def upload_file(request):
     if request.method == 'POST':
         form = UploadForm(request.POST, request.FILES)
@@ -269,23 +272,19 @@ def upload_file(request):
 
 def speak(text, language="en"):
     try:
-        # Ensure the audio directory exists
         audio_dir = os.path.join(settings.MEDIA_ROOT, 'audio')
         os.makedirs(audio_dir, exist_ok=True)
         
-        # Generate a unique filename
         audio_file = os.path.join(audio_dir, f"{hash(text)}_{language}.mp3")
         
-        if not os.path.exists(audio_file):  # Avoid regenerating the same file
+        if not os.path.exists(audio_file):  
             try:
-                # Use gTTS for speech generation
                 tts = gTTS(text=text, lang=language)
                 tts.save(audio_file)
                 print(f"Audio file saved: {audio_file}")
             except Exception as e:
                 print(f"gTTS Error: {e}, falling back to pyttsx3.")
                 try:
-                    # Use pyttsx3 as a fallback
                     engine = pyttsx3.init()
                     engine.save_to_file(text, audio_file)
                     engine.runAndWait()
@@ -293,7 +292,7 @@ def speak(text, language="en"):
                 except Exception as e:
                     print(f"pyttsx3 Error: {e}")
         
-        return audio_file  # Return the file path for playback
+        return audio_file 
     except Exception as e:
         print(f"Error in speech generation: {e}")
         return None
@@ -343,6 +342,8 @@ def keywords_detail(request, pk):
         'translated_keywords': translated_keywords,
         'languages': LANGUAGES,
     })
+
+
 def file_list(request):
     files = UploadFile.objects.all()
     return render(request, 'file_list.html', {'files': files})

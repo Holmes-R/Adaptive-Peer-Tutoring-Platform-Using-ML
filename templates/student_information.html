@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-container h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .form-group button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Login</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" placeholder="Your Name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Your Email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Your Password" required>
+            </div>
+            <button type="button" onclick="submitLogin()">Submit</button>
+        </form>
+
+        <form id="otpForm" style="display:none;">
+            <div class="form-group">
+                <label for="otp">OTP</label>
+                <input type="text" id="otp" name="otp" placeholder="Enter OTP" required>
+            </div>
+            <button type="button" onclick="submitOtp()">Verify OTP</button>
+        </form>
+    </div>
+
+    <script>
+        async function submitLogin() {
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("/login_user/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, user_password: password })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+                document.getElementById("loginForm").style.display = "none";
+                document.getElementById("otpForm").style.display = "block";
+            } else {
+                alert(result.error);
+            }
+        }
+
+        async function submitOtp() {
+            const otp = document.getElementById("otp").value;
+            const email = document.getElementById("email").value;
+
+            const response = await fetch(`/verify_otp/${email}/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ otp })
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(result.message);
+                window.location.href = "/student_information/";
+            } else {
+                alert(result.error);
+            }
+        }
+    </script>
+</body>
+</html>

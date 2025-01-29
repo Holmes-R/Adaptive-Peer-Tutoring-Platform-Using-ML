@@ -22,7 +22,7 @@ from comtypes import CoInitialize, CoUninitialize
 from django.conf import settings
 from .models import Feedback, LoginForm
 from django.contrib.auth.decorators import login_required
-
+from googletrans import Translator as GoogleTranslator
 @csrf_exempt
 def loginUser(request):
     if request.method == 'GET':
@@ -215,16 +215,23 @@ LANGUAGES = [
     ("es", "Spanish"),
     ("de", "German"),
     ("it", "Italian"),
-    
+    ("hi", "Hindi"),
+    ("ur", "Urdu"),
+    ("ta", "Tamil"),
+    ("ml", "Malayalam"),
 ]
-
+    
 def translate_text(text, target_lang):
     """
-    Translate text using `translate` library for Tamil, Telugu, and Malayalam,
-    and M2M-100 for other international languages.
+    Translate text using:
+    - `translate` library for Tamil, Telugu, Malayalam
+    - Google Translate API for other regional languages
+    - M2M-100 for international languages
     """
-    if target_lang in ['ta', 'te', 'ml']:  # Tamil, Telugu, Malayalam
+    if target_lang in ['ta', 'te', 'ml']: 
         return translate_with_other_method(text, target_lang)
+    elif target_lang in ['hi', 'kn', 'mr', 'gu', 'bn', 'pa', 'ur']:  
+        return translate_with_google(text, target_lang)
     else:
         return translate_with_m2m100(text, target_lang)
 
@@ -232,7 +239,7 @@ def translate_with_m2m100(text, target_lang):
     """
     Translate text using the M2M-100 model.
     """
-    tokenizer.src_lang = "en"  # Assuming source language is English
+    tokenizer.src_lang = "en"
     encoded_text = tokenizer(text, return_tensors="pt")
     generated_tokens = model.generate(
         **encoded_text,
@@ -243,7 +250,7 @@ def translate_with_m2m100(text, target_lang):
 
 def translate_with_other_method(text, target_lang):
     """
-    Translate text for Tamil, Telugu, and Malayalam using the `translate` library.
+    Translate Tamil, Telugu, and Malayalam using the `translate` library.
     """
     lang_mapping = {
         'ta': 'ta',  # Tamil
@@ -252,6 +259,14 @@ def translate_with_other_method(text, target_lang):
     }
     translator = Translator(to_lang=lang_mapping.get(target_lang, "en"))
     return translator.translate(text)
+
+def translate_with_google(text, target_lang):
+    """
+    Translate Hindi, Kannada, Marathi, Gujarati, Bengali, Punjabi, and Urdu using Google Translate.
+    """
+    google_translator = GoogleTranslator()
+    translated_text = google_translator.translate(text, dest=target_lang).text
+    return translated_text
 
 def upload_file(request):
     if request.method == 'POST':

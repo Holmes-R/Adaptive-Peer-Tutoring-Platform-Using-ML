@@ -73,7 +73,7 @@ def loginUser(request):
 def verify_otp(request, email):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)  # Parse the OTP sent from frontend
+            data = json.loads(request.body)  
             user_otp = data.get('user_otp')
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)

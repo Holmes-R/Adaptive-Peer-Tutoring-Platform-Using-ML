@@ -48,7 +48,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Student',
     'rest_framework',
-    "django_extensions",]
+    "django_extensions",
+    'user_visit',
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -58,6 +60,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+        'user_visit.middleware.UserVisitMiddleware',
+
+
 ]
 
 REST_FRAMEWORK = {

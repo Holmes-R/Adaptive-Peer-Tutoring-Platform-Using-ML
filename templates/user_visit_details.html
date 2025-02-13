@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% extends "base_generic.html" %}
+
+{% block content %}
+  <h2>User Visit Details</h2>
+
+  {% if student_name %}
+    <h3>Student Name: {{ student_name }}</h3>
+  {% else %}
+    <h3>No student information available</h3>
+  {% endif %}
+
+  <h3>Latest Visit</h3>
+  {% if latest_visit %}
+    <p>
+      <strong>IP Address:</strong> {{ latest_visit.ip_address }}<br>
+      <strong>User Agent:</strong> {{ latest_visit.user_agent }}<br>
+      <strong>Referrer:</strong> {{ latest_visit.referrer }}<br>
+      <strong>Visit Time:</strong> {{ latest_visit.visit_time }}<br>
+    </p>
+  {% else %}
+    <p>No visits recorded yet</p>
+  {% endif %}
+
+  <h3>All Visits</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>IP Address</th>
+        <th>User Agent</th>
+        <th>Referrer</th>
+        <th>Visit Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for visit in user_visits %}
+        <tr>
+          <td>{{ visit.ip_address }}</td>
+          <td>{{ visit.user_agent }}</td>
+          <td>{{ visit.referrer }}</td>
+          <td>{{ visit.visit_time }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">No visits yet</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+{% endblock %}
+
+</body>
+</html>

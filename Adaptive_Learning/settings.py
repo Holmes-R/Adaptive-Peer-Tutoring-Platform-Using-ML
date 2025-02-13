@@ -62,7 +62,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
         'user_visit.middleware.UserVisitMiddleware',
 
-
 ]
 
 REST_FRAMEWORK = {

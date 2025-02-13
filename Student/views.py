@@ -3,7 +3,7 @@ from django.contrib.auth import login as auth_login
 from django.db import IntegrityError
 from django.http import JsonResponse
 from translate import Translator
-from .models import LoginForm ,Home ,StudentID ,UploadFile,UserActivity
+from .models import LoginForm ,Home ,StudentID, UploadFile ,UploadFile
 from .forms import UploadForm
 from django.shortcuts import get_object_or_404 , redirect , render
 from django.views.decorators.csrf import csrf_exempt
@@ -81,16 +81,13 @@ def verify_otp(request, email):
         if not user_otp:
             return JsonResponse({"error": "OTP is required."}, status=400)
 
-        # Fetch the user by email
         user = get_object_or_404(LoginForm, email=email)
 
-        # Verify OTP validity
         if user.generated_otp == str(user_otp):
             if user.otp_expiry and timezone.now() <= user.otp_expiry:
-                user.user_otp = user_otp  # Save the OTP for record
+                user.user_otp = user_otp
                 user.save()
 
-                # Check if StudentID exists, if not, create one
                 student_id = StudentID.objects.filter(student=user).first()
                 if not student_id:
                     student_id = StudentID(student=user, password=user.user_password)
@@ -115,10 +112,16 @@ def getInformation(request):
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
+        email = data.get('email')
         password = data.get('user_password')
 
-        if not password:
-            return JsonResponse({"error": "Password is required."}, status=400)
+        if not email or not password:
+            return JsonResponse({"error": "Email and Password are required."}, status=400)
+
+        login_form_instance = LoginForm.objects.filter(email=email, user_password=password).first()
+
+        if not login_form_instance:
+            return JsonResponse({"error": "Unauthorized. Please sign up or sign in first."}, status=401)
 
         college_name = data.get('college_name')
         course = data.get('course')
@@ -127,10 +130,6 @@ def getInformation(request):
         student_choice = data.get('student_choice')
         cgpa_percentage = data.get('cgpa_percentage')
         cgpa_number = data.get('cgpa_number')
-        email = data.get('email') 
-
-        if not email:
-            return JsonResponse({"error": "Email is required to identify the student."}, status=400)
 
         if CGPA == 'percentage' and not cgpa_percentage:
             return JsonResponse({"error": "CGPA percentage is required when CGPA type is 'percentage'."}, status=400)
@@ -138,16 +137,8 @@ def getInformation(request):
             return JsonResponse({"error": "CGPA number is required when CGPA type is 'cgpa'."}, status=400)
 
         try:
-            login_form_instance = LoginForm.objects.filter(email=email).first()
-
-            if login_form_instance:
-                login_form_instance.user_password = password
-                login_form_instance.save()
-            else:
-                login_form_instance = LoginForm.objects.create(email=email, user_password=password)
-
             home_instance, created = Home.objects.update_or_create(
-                student_name=login_form_instance, 
+                student_name=login_form_instance,
                 defaults={
                     'college_name': college_name,
                     'course': course,
@@ -159,11 +150,8 @@ def getInformation(request):
                 }
             )
 
-            if created:
-                home_instance.save()
-
-            student_id_instance, created = StudentID.objects.update_or_create(
-                student=login_form_instance, 
+            student_id_instance, _ = StudentID.objects.update_or_create(
+                student=login_form_instance,
                 defaults={'password': password}
             )
 
@@ -172,12 +160,11 @@ def getInformation(request):
                 "student_id": student_id_instance.unique_id  
             }, status=201)
 
-        except ValueError as e:
-            return JsonResponse({"error": str(e)}, status=400)
         except IntegrityError as e:
             return JsonResponse({"error": f"Integrity Error: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
+
 
 
 @csrf_exempt
@@ -267,9 +254,20 @@ def translate_with_google(text, target_lang):
     google_translator = GoogleTranslator()
     translated_text = google_translator.translate(text, dest=target_lang).text
     return translated_text
-
 def upload_file(request):
     if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        if not email or not password:
+            return JsonResponse({"error": "Email and Password are required to upload files."}, status=400)
+
+        # Check if user exists (either signed up or signed in)
+        user = LoginForm.objects.filter(email=email, user_password=password).first()
+
+        if not user:
+            return JsonResponse({"error": "Unauthorized. Please sign up or sign in first."}, status=401)
+
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
             upload = form.save()
@@ -284,7 +282,6 @@ def upload_file(request):
         form = UploadForm()
 
     return render(request, 'upload.html', {'form': form})
-
 def speak(text, language="en"):
     try:
         audio_dir = os.path.join(settings.MEDIA_ROOT, 'audio')

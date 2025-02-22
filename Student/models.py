@@ -173,11 +173,14 @@ STUDENT_CHOICE = [
 ]
 
 class UploadFile(models.Model):
+    student_upload = models.ForeignKey(LoginForm, on_delete=models.CASCADE, related_name='uploaded_by')
     upload_file = models.FileField(null=False,upload_to='documents/',validators=[FileExtensionValidator(['pdf', 'docx','pptx'])])
     uploaded_at = models.DateTimeField(auto_now_add=True)
     student_options = models.CharField(choices=STUDENT_CHOICE,max_length=30)
     keywords = models.TextField(null=True, blank=True) 
     summary = models.TextField(null=True, blank=True)  
+    def __str__(self):
+        return f'{self.student_upload})'
 
     class Meta:
         verbose_name_plural = 'File Upload'

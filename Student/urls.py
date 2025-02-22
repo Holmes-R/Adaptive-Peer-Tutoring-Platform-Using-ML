@@ -14,6 +14,7 @@ urlpatterns = [
     path('file/<int:pk>/keywords/', views.keywords_detail, name='keywords_detail'),
     path('submit_feedback_summary/', views.submit_feedback_summary, name='submit_feedback_summary'),
     path('submit_feedback_keywords/', views.submit_feedback_keywords, name='submit_feedback_keywords'),
+      path('adlog/', views.admin_login, name='login'),
 
 ]
 

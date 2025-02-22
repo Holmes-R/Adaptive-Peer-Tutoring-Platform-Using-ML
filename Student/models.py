@@ -173,7 +173,7 @@ STUDENT_CHOICE = [
 ]
 
 class UploadFile(models.Model):
-    student_upload = models.ForeignKey(LoginForm, on_delete=models.CASCADE, related_name='uploaded_by')
+    student_upload = models.ForeignKey(LoginForm, on_delete=models.CASCADE, related_name='uploads', null=True, blank=True)
     upload_file = models.FileField(null=False,upload_to='documents/',validators=[FileExtensionValidator(['pdf', 'docx','pptx'])])
     uploaded_at = models.DateTimeField(auto_now_add=True)
     student_options = models.CharField(choices=STUDENT_CHOICE,max_length=30)

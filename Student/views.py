@@ -382,3 +382,22 @@ def submit_feedback_keywords(request):
         return redirect('thank_you') 
 
     return render(request, 'files_keyword.html')
+
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+def admin_login(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=email, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('/admin')  
+        else:
+            messages.error(request, "Invalid email or password. Please try again.")
+
+    return render(request, 'admin.html')

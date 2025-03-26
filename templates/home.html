@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Adaptive Peer Tutoring</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: white;
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff);
+            animation: gradientAnimation 10s infinite alternate;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff); }
+            50% { background: linear-gradient(135deg, #2575fc, #00c6ff, #6a11cb); }
+            100% { background: linear-gradient(135deg, #00c6ff, #6a11cb, #2575fc); }
+        }
+
+        /* Header Navigation Bar */
+        .navbar {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand i {
+            margin-right: 10px;
+            font-size: 2rem;
+            color: #00c6ff;
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 500;
+            margin: 0 10px;
+            padding: 8px 15px;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .navbar-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00c6ff;
+            transition: 0.3s;
+        }
+
+        .navbar-nav .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .navbar-nav .nav-link.active {
+            color: #00c6ff !important;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section h1 {
+            font-size: 4.5rem;
+            font-weight: bold;
+            animation: fadeInDown 1.5s;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+
+        .hero-section p {
+            font-size: 1.5rem;
+            max-width: 800px;
+            animation: fadeInUp 1.5s;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Animated Shapes */
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            left: 10%;
+            animation-duration: 8s;
+        }
+
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            top: 50%;
+            left: 70%;
+            animation-duration: 10s;
+        }
+
+        .shape-3 {
+            width: 80px;
+            height: 80px;
+            top: 70%;
+            left: 20%;
+            animation-duration: 12s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        /* Clock and Calendar */
+        .clock-calendar {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .clock, .calendar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .clock h3, .calendar h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #00c6ff;
+        }
+
+        .clock p {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .calendar p {
+            font-size: 1.2rem;
+        }
+
+        /* Button Container */
+        .button-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        /* Fantasy Button Design */
+        .btn-fantasy {
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-fantasy::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 70%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: 0.5s;
+            border-radius: 50%;
+        }
+
+        .btn-fantasy:hover::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .btn-fantasy:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 198, 255, 0.6);
+        }
+
+        .btn-fantasy:active {
+            transform: scale(0.95);
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .features-section h2 {
+            font-size: 3rem;
+            margin-bottom: 50px;
+            animation: fadeInDown 1.5s;
+            color: white;
+        }
+
+        .feature-box {
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            animation: fadeInUp 1.5s;
+        }
+
+        .feature-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-box i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #00c6ff;
+        }
+
+        .feature-box h4 {
+            color: white;
+        }
+
+        .feature-box p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* About Section */
+        .about-section {
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-section h2 {
+            font-size: 3rem;
+            margin-bottom: 30px;
+            animation: fadeInDown 1.5s;
+            color: white;
+        }
+
+        .about-section p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeInUp 1.5s;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Testimonials Section */
+        .testimonial-section {
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonial-section h2 {
+            font-size: 3rem;
+            margin-bottom: 50px;
+            animation: fadeInDown 1.5s;
+            color: white;
+        }
+
+        .testimonial-box {
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            animation: fadeInUp 1.5s;
+        }
+
+        .testimonial-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .testimonial-box img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+
+        .testimonial-box h4 {
+            color: white;
+        }
+
+        .testimonial-box p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .footer a {
+            color: #00c6ff;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .social-icons {
+            margin-top: 10px;
+        }
+
+        .social-icons a {
+            color: white;
+            margin: 0 10px;
+            font-size: 1.5rem;
+            transition: 0.3s;
+        }
+
+        .social-icons a:hover {
+            color: #00c6ff;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <!-- Animated Shapes -->
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+
+        <h1>Welcome to Adaptive Peer Tutoring</h1>
+        <p>Empowering learners with AI-driven multilingual peer tutoring. Upload your PPT, change the language, and learn effectively.</p>
+        <div class="clock-calendar">
+            <div class="clock">
+                <h3>Current Time</h3>
+                <p id="clock"></p>
+            </div>
+            <div class="calendar">
+                <h3>Today's Date</h3>
+                <p id="calendar"></p>
+            </div>
+        </div>
+        <div class="button-container">
+            <a href="{% url 'sign_in' %}" class="btn-fantasy">Sign Up</a>
+            <a href="{% url 'login' %}" class="btn-fantasy">Login</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <h2>Platform Features</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <i class="bi bi-translate"></i>
+                        <h4>Multilingual Support</h4>
+                        <p>Translate and learn in multiple languages with AI-powered text-to-speech.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <i class="bi bi-upload"></i>
+                        <h4>Easy PPT Upload</h4>
+                        <p>Upload presentations and get them converted into readable, spoken content.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <i class="bi bi-bar-chart-line"></i>
+                        <h4>Admin Dashboard</h4>
+                        <p>Monitor user activity and manage content effectively.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+        <div class="container">
+            <h2>About Us</h2>
+            <p>Adaptive Peer Tutoring (APT) is a cutting-edge platform designed to enhance learning experiences through AI-driven tools. Our mission is to make education accessible and effective for everyone, regardless of language barriers.</p>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonial-section" id="testimonials">
+        <div class="container">
+            <h2>What Our Users Say</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="testimonial-box">
+                        <img src="https://via.placeholder.com/80" alt="User 1">
+                        <h4>John Doe</h4>
+                        <p>"APT has revolutionized the way I learn. The multilingual support is a game-changer!"</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-box">
+                        <img src="https://via.placeholder.com/80" alt="User 2">
+                        <h4>Jane Smith</h4>
+                        <p>"The PPT upload feature is so easy to use. I can now focus more on learning rather than formatting."</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="testimonial-box">
+                        <img src="https://via.placeholder.com/80" alt="User 3">
+                        <h4>Alice Johnson</h4>
+                        <p>"The admin dashboard is incredibly helpful for tracking progress and managing content."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2023 Adaptive Peer Tutoring. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+            <div class="social-icons">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-twitter"></i></a>
+                <a href="#"><i class="bi bi-linkedin"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Add active class to clicked nav link
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+
+        // Clock and Calendar
+        function updateClock() {
+            const now = new Date();
+            const clock = document.getElementById('clock');
+            const calendar = document.getElementById('calendar');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const date = now.toDateString();
+            clock.textContent = `${hours}:${minutes}:${seconds}`;
+            calendar.textContent = date;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>

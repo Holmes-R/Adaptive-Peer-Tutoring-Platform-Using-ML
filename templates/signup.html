@@ -1,0 +1,107 @@
+<!-- signup.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1abc9c, #3498db);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .card {
+            width: 400px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background-color: #2c3e50;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #1abc9c;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2 class="text-center">Sign Up</h2>
+        <form>
+            <div class="mb-3">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="name" placeholder="Enter your full name">
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" placeholder="Enter your email">
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Enter password">
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+            <p class="text-center mt-3">Already have an account? <a href="signin.html">Sign In</a></p>
+        </form>
+    </div>
+</body>
+</html>
+
+<!-- home.html Modification -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+        }
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+        }
+        .btn-custom {
+            background-color: #1abc9c;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+        }
+        .btn-custom:hover {
+            background-color: #16a085;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Multilingual Tutoring</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="signup.html">Sign Up</a></li>
+                    <li class="nav-item"><a class="nav-link" href="signin.html">Sign In</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="hero">
+        <h1>Welcome to Adaptive Multilingual Peer Tutoring</h1>
+        <p>Empowering students with AI-powered multilingual learning</p>
+        <a href="signup.html" class="btn btn-custom">Get Started</a>
+    </div>
+</body>
+</html>

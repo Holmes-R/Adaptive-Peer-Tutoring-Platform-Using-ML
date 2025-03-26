@@ -3,140 +3,236 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Student Information - Adaptive Peer Tutoring</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
+        /* Global Styles */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f9;
+            color: white;
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff);
+            animation: gradientAnimation 10s infinite alternate;
+            overflow-x: hidden;
         }
+
+        @keyframes gradientAnimation {
+            0% { background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff); }
+            50% { background: linear-gradient(135deg, #2575fc, #00c6ff, #6a11cb); }
+            100% { background: linear-gradient(135deg, #00c6ff, #6a11cb, #2575fc); }
+        }
+
+        /* Form Container */
         .form-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
             width: 100%;
-            max-width: 400px;
+            margin: 20px;
+            animation: fadeInUp 1.5s;
         }
+
         .form-container h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
             margin-bottom: 20px;
-            font-size: 24px;
-            color: #333;
+            color: white;
             text-align: center;
         }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+
         .form-group label {
-            display: block;
-            font-size: 14px;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
             margin-bottom: 5px;
-            color: #555;
         }
-        .form-group input {
+
+        .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: 0.3s;
         }
-        .form-group input:focus {
-            border-color: #007bff;
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: #00c6ff;
             outline: none;
+            box-shadow: 0 0 8px rgba(0, 198, 255, 0.4);
         }
+
         .form-group button {
             width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007bff;
+            padding: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            transition: 0.3s;
         }
+
         .form-group button:hover {
-            background-color: #0056b3;
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 198, 255, 0.4);
         }
-        .error {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
+
+        /* Animated Shapes */
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            left: 10%;
+            animation-duration: 8s;
+        }
+
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            top: 50%;
+            left: 70%;
+            animation-duration: 10s;
+        }
+
+        .shape-3 {
+            width: 80px;
+            height: 80px;
+            top: 70%;
+            left: 20%;
+            animation-duration: 12s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1>Login</h1>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" placeholder="Your Name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="Your Email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Your Password" required>
-            </div>
-            <button type="button" onclick="submitLogin()">Submit</button>
-        </form>
+    <!-- Animated Shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
 
-        <form id="otpForm" style="display:none;">
-            <div class="form-group">
-                <label for="otp">OTP</label>
-                <input type="text" id="otp" name="otp" placeholder="Enter OTP" required>
-            </div>
-            <button type="button" onclick="submitOtp()">Verify OTP</button>
-        </form>
-    </div>
+    <!-- Form Section -->
+    <section class="hero-section">
+        <div class="form-container">
+            <h1>Student Information</h1>
+            <form id="studentInfoForm">
+                <input name="email" type="hidden" id="email" value="{{ email }}">
+                <div class="form-group">
+                    <label for="college_name">College Name</label>
+                    <input type="text" id="college_name" name="college_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <input type="text" id="course" name="course" required>
+                </div>
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <input type="number" id="year" name="year" required>
+                </div>
+                <div class="form-group">
+                    <label for="cgpa_type">CGPA Type</label>
+                    <select id="cgpa_type" name="CGPA" required>
+                        <option value="percentage">Percentage</option>
+                        <option value="cgpa">CGPA</option>
+                    </select>
+                </div>
+                <div class="form-group" id="cgpa_percentage_group">
+                    <label for="cgpa_percentage">CGPA Percentage</label>
+                    <input type="number" id="cgpa_percentage" name="cgpa_percentage" step="0.01">
+                </div>
+                <div class="form-group" id="cgpa_number_group" style="display: none;">
+                    <label for="cgpa_number">CGPA Number</label>
+                    <input type="number" id="cgpa_number" name="cgpa_number" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="student_choice">Student Choice</label>
+                    <input type="text" id="student_choice" name="student_choice" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Submit</button>
+                </div>
+            </form>
+        </div>
+    </section>
 
     <script>
-        async function submitLogin() {
-            const name = document.getElementById("name").value;
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+        // Show/hide CGPA fields based on selection
+        const cgpaType = document.getElementById('cgpa_type');
+        const cgpaPercentageGroup = document.getElementById('cgpa_percentage_group');
+        const cgpaNumberGroup = document.getElementById('cgpa_number_group');
+        const email = document.getElementById("email");
 
-            const response = await fetch("/login_user/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, user_password: password })
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                alert(result.message);
-                document.getElementById("loginForm").style.display = "none";
-                document.getElementById("otpForm").style.display = "block";
+        cgpaType.addEventListener('change', () => {
+            if (cgpaType.value === 'percentage') {
+                cgpaPercentageGroup.style.display = 'block';
+                cgpaNumberGroup.style.display = 'none';
             } else {
-                alert(result.error);
+                cgpaPercentageGroup.style.display = 'none';
+                cgpaNumberGroup.style.display = 'block';
             }
-        }
+        });
 
-        async function submitOtp() {
-            const otp = document.getElementById("otp").value;
-            const email = document.getElementById("email").value;
+        // Handle form submission
+        // Handle form submission
+const form = document.getElementById('studentInfoForm');
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-            const response = await fetch(`/verify_otp/${email}/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ otp })
-            });
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
 
-            const result = await response.json();
-            if (response.ok) {
-                alert(result.message);
-                window.location.href = "/student_information/";
+    try {
+        const response = await fetch('/information/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',  // Include CSRF token
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            alert(result.message || 'Details saved successfully!');
+            if (result.student_id) {
+                alert(`Your Unique ID: ${result.student_id}`);
+                window.location.href = `/upload/?student_id=${result.student_id}`;  // Redirect to upload page with student_id
             } else {
-                alert(result.error);
+                window.location.href = '/';  // Redirect to home if no student_id
             }
+        } else {
+            alert(result.error || 'Failed to save details.');
         }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+
     </script>
 </body>
 </html>

@@ -4,15 +4,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .otp-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 300px;
+        }
+        .otp-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .otp-container input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .otp-container input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .otp-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .otp-container button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Verify OTP</h1>
-    <form method="POST">
-        {% csrf_token %}
-        <label for="otp">Enter OTP:</label>
-        <input type="text" id="otp" name="otp" required>
-        <button type="submit">Verify OTP</button>
-    </form>
-    <p>OTP will expire in 5 minutes.</p>
+    <div class="otp-container">
+        <h2>Enter OTP</h2>
+        <form id="otpForm">
+            {% csrf_token %}
+            <input type="hidden" id="email" value="{{ email }}">
+            <input type="text" id="otp" placeholder="Enter OTP" required>
+            <button type="button" onclick="submitOtp()">Verify</button>
+        </form>
+        <div id="errorMessage" class="error-message"></div>
+    </div>
+
+    <script>
+        async function submitOtp() {
+            const email = document.getElementById("email").value;
+            const otp = document.getElementById("otp").value;
+            const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+            const errorMessage = document.getElementById("errorMessage");
+
+            // Clear previous error messages
+            errorMessage.textContent = "";
+
+            // Validate OTP input
+            if (!otp || otp.length !== 6 || isNaN(otp)) {
+                errorMessage.textContent = "Please enter a valid 6-digit OTP.";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/verify-otp/${email}/`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": csrfToken
+                    },
+                    body: JSON.stringify({ otp })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message);  // Show success message
+                    window.location.href = data.redirect_url;  // Redirect to student information page
+                } else {
+                    errorMessage.textContent = data.error || "OTP verification failed.";  // Show error message
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                errorMessage.textContent = "Something went wrong. Please try again.";
+            }
+        }
+    </script>
 </body>
 </html>

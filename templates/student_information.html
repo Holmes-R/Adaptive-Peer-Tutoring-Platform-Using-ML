@@ -3,140 +3,382 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Student Information - Adaptive Peer Tutoring</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        /* Global Styles */
+        body, html {
+            height: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff);
+            animation: gradientAnimation 10s infinite alternate;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff); }
+            50% { background: linear-gradient(135deg, #2575fc, #00c6ff, #6a11cb); }
+            100% { background: linear-gradient(135deg, #00c6ff, #6a11cb, #2575fc); }
+        }
+
+        /* Main Content Container */
+        .content-container {
             display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
-            background-color: #f4f4f9;
+            padding: 25px;
+            box-sizing: border-box;
+            gap: 25px;
         }
+
+        /* Left Column - Form Container */
         .form-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+            width: 40%;
+            height: calc(100% - 50px);
+            overflow-y: auto;
+            animation: fadeInLeft 1.5s;
         }
+
+        /* Right Column - Project Description */
+        .project-description {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+            width: 60%;
+            height: calc(100% - 50px);
+            overflow-y: scroll; /* Changed to 'scroll' for persistent scrollbar */
+            animation: fadeInRight 1.5s;
+            scrollbar-width: thin; /* For Firefox */
+            scrollbar-color: rgba(255, 255, 255, 0.4) rgba(255, 255, 255, 0.1); /* For Firefox */
+        }
+
         .form-container h1 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: white;
             text-align: center;
+            letter-spacing: 0.5px;
         }
+
+        .project-description h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 0 0 20px 0;
+            color: white;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
+
         .form-group label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #555;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        .form-group input {
+
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 10px 12px;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
         }
-        .form-group input:focus {
-            border-color: #007bff;
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: #00c6ff;
             outline: none;
+            box-shadow: 0 0 6px rgba(0, 198, 255, 0.5);
         }
+
         .form-group button {
             width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007bff;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(to right, #00c6ff, #0072ff);
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-top: 15px;
         }
+
         .form-group button:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0, 198, 255, 0.4);
         }
-        .error {
-            color: red;
-            font-size: 12px;
-            margin-top: 5px;
+
+        .project-description p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .project-image {
+            width: calc(80% - 40px);
+            margin: 15px auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        /* Animated Shapes */
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+            z-index: -1;
+        }
+
+        .shape-1 {
+            width: 80px;
+            height: 80px;
+            top: 15%;
+            left: 5%;
+            animation-duration: 8s;
+        }
+
+        .shape-2 {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            left: 80%;
+            animation-duration: 10s;
+        }
+
+        .shape-3 {
+            width: 60px;
+            height: 60px;
+            top: 80%;
+            left: 15%;
+            animation-duration: 12s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .content-container {
+                flex-direction: column;
+                height: auto;
+                overflow-y: auto;
+            }
+            .form-container, .project-description {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        /* Custom scrollbar */
+        .project-description::-webkit-scrollbar {
+            width: 8px;
+        }
+        .project-description::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        .project-description::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 4px;
+        }
+        .project-description::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.6);
         }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1>Login</h1>
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" placeholder="Your Name" required>
-            </div>
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" placeholder="Your Email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Your Password" required>
-            </div>
-            <button type="button" onclick="submitLogin()">Submit</button>
-        </form>
+    <!-- Animated Shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
 
-        <form id="otpForm" style="display:none;">
-            <div class="form-group">
-                <label for="otp">OTP</label>
-                <input type="text" id="otp" name="otp" placeholder="Enter OTP" required>
-            </div>
-            <button type="button" onclick="submitOtp()">Verify OTP</button>
-        </form>
+    <!-- Main Content -->
+    <div class="content-container">
+        <!-- Left Column - Form Section -->
+        <div class="form-container">
+            <h1>Student Information</h1>
+            <form id="studentInfoForm">
+                <input name="email" type="hidden" id="email" value="{{ email }}">
+                <div class="form-group">
+                    <label for="college_name">College Name</label>
+                    <input type="text" id="college_name" name="college_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <input type="text" id="course" name="course" required>
+                </div>
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <input type="number" id="year" name="year" min="1" max="6" required>
+                </div>
+                <div class="form-group">
+                    <label for="cgpa_type">CGPA Type</label>
+                    <select id="cgpa_type" name="CGPA" required>
+                        <option value="percentage">Percentage</option>
+                        <option value="cgpa">CGPA</option>
+                    </select>
+                </div>
+                <div class="form-group" id="cgpa_percentage_group">
+                    <label for="cgpa_percentage">CGPA Percentage</label>
+                    <input type="number" id="cgpa_percentage" name="cgpa_percentage" step="0.01" min="0" max="100">
+                </div>
+                <div class="form-group" id="cgpa_number_group" style="display: none;">
+                    <label for="cgpa_number">CGPA Number</label>
+                    <input type="number" id="cgpa_number" name="cgpa_number" step="0.01" min="0" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="student_choice">Student Choice</label>
+                    <input type="text" id="student_choice" name="student_choice" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Submit Information</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Column - Project Description -->
+        <div class="project-description">
+            <h2>About Adaptive Peer Tutoring</h2>
+            <p>
+                <strong>Adaptive Peer Tutoring</strong> revolutionizes the educational experience by fostering dynamic, peer-to-peer learning partnerships. Our cutting-edge platform leverages advanced algorithms to pair students based on their academic strengths, weaknesses, and complementary skill sets, creating an environment where knowledge sharing thrives.
+            </p>
+            
+            <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+                 alt="Students collaborating" 
+                 class="project-image">
+            
+            <p>
+                Our mission is to empower students by connecting them with peers who can provide personalized support and fresh perspectives. Whether you’re grappling with complex concepts or eager to mentor others in your areas of expertise, Adaptive Peer Tutoring offers a collaborative ecosystem designed to elevate academic success for all participants.
+            </p>
+            
+            <p>
+                Key features include:
+            </p>
+            <ul style="margin: 0 0 20px 20px; padding-left: 20px; color: rgba(255, 255, 255, 0.9);">
+                <li>Smart pairing algorithm based on detailed academic profiles</li>
+                <li>Personalized learning pathways tailored to individual needs</li>
+                <li>Progress tracking and feedback system for continuous improvement</li>
+                <li>Flexible scheduling for tutoring sessions to suit your availability</li>
+                <li>Community forums for resource sharing and peer discussions</li>
+                <li>Real-time collaboration tools, including chat and document sharing</li>
+                <li>Performance analytics to identify growth areas and celebrate achievements</li>
+            </ul>
+            
+            <p>
+                Joining our platform means becoming part of a vibrant network of learners and tutors dedicated to academic excellence. Whether you’re preparing for critical exams, honing a new skill, or seeking a reliable study partner, Adaptive Peer Tutoring provides the tools and connections you need to succeed.
+            </p>
+            
+            <p>
+                We also prioritize accessibility and inclusivity, ensuring that students from diverse backgrounds can benefit from peer support. Our platform supports multiple languages and offers resources for students with varying learning styles, making education more equitable and engaging.
+            </p>
+            
+            <p>
+                Beyond individual growth, Adaptive Peer Tutoring fosters a sense of community. Students can participate in group study sessions, contribute to knowledge bases, and even earn recognition for their tutoring efforts through our rewards system. This holistic approach ensures that learning is not just effective but also enjoyable.
+            </p>
+            
+            <p>
+                Our platform is built on years of research into peer learning dynamics, incorporating best practices from educational psychology and technology. We continuously update our algorithms and features based on user feedback and emerging trends in education, ensuring that you always have access to the most effective tools.
+            </p>
+            
+            <p>
+                Ready to transform your learning experience? Complete the form to join our growing community. Take the first step toward unlocking your academic potential with Adaptive Peer Tutoring—where collaboration meets innovation.
+            </p>
+        </div>
     </div>
 
     <script>
-        async function submitLogin() {
-            const name = document.getElementById("name").value;
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+        // Show/hide CGPA fields based on selection
+        const cgpaType = document.getElementById('cgpa_type');
+        const cgpaPercentageGroup = document.getElementById('cgpa_percentage_group');
+        const cgpaNumberGroup = document.getElementById('cgpa_number_group');
 
-            const response = await fetch("/login_user/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, user_password: password })
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                alert(result.message);
-                document.getElementById("loginForm").style.display = "none";
-                document.getElementById("otpForm").style.display = "block";
+        cgpaType.addEventListener('change', () => {
+            if (cgpaType.value === 'percentage') {
+                cgpaPercentageGroup.style.display = 'block';
+                cgpaNumberGroup.style.display = 'none';
             } else {
-                alert(result.error);
+                cgpaPercentageGroup.style.display = 'none';
+                cgpaNumberGroup.style.display = 'block';
             }
-        }
+        });
 
-        async function submitOtp() {
-            const otp = document.getElementById("otp").value;
-            const email = document.getElementById("email").value;
+        // Handle form submission
+        const form = document.getElementById('studentInfoForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-            const response = await fetch(`/verify_otp/${email}/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ otp })
-            });
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
 
-            const result = await response.json();
-            if (response.ok) {
-                alert(result.message);
-                window.location.href = "/student_information/";
-            } else {
-                alert(result.error);
+            try {
+                const response = await fetch('/information/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message || 'Details saved successfully!');
+                    if (result.student_id) {
+                        alert(`Your Unique ID: ${result.student_id}`);
+                        window.location.href = `/upload/?student_id=${result.student_id}`;
+                    } else {
+                        window.location.href = '/';
+                    }
+                } else {
+                    alert(result.error || 'Failed to save details.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
             }
-        }
+        });
+
+        // Adjust layout on load
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.content-container');
+            const formHeight = document.querySelector('.form-container').scrollHeight;
+            const descHeight = document.querySelector('.project-description').scrollHeight;
+            
+            if (formHeight > window.innerHeight || descHeight > window.innerHeight) {
+                container.style.height = 'auto';
+                container.style.overflowY = 'auto';
+            }
+        });
     </script>
 </body>
 </html>

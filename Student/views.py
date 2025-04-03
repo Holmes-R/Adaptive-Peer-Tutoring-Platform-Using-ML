@@ -2,16 +2,17 @@ from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login
 from django.db import IntegrityError
 from django.http import JsonResponse
+from django.urls import reverse
 from translate import Translator
-from .models import LoginForm ,Home ,StudentID, UploadFile ,UploadFile
+from .models import LoginForm, Home, StudentID, UploadFile, Feedback
 from .forms import UploadForm
-from django.shortcuts import get_object_or_404 , redirect , render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils import timezone
 import logging
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
-from rest_framework.decorators import  throttle_classes
+from rest_framework.decorators import throttle_classes
 from transformers import M2M100ForConditionalGeneration, M2M100Tokenizer
 import torch
 import sentencepiece
@@ -20,9 +21,17 @@ import os
 import pyttsx3
 from comtypes import CoInitialize, CoUninitialize
 from django.conf import settings
-from .models import Feedback, LoginForm
 from django.contrib.auth.decorators import login_required
 from googletrans import Translator as GoogleTranslator
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
+
+# Home View
+
+def home(request):
+    return render(request, 'home.html')
+
+# Login User
 @csrf_exempt
 def loginUser(request):
     if request.method == 'GET':
@@ -55,70 +64,78 @@ def loginUser(request):
         user.save()
 
         django_user = User.objects.filter(email=email).first()
-        if django_user:
-            auth_login(request, django_user)
-        else:
+        if not django_user:
             django_user = User.objects.create_user(username=email, email=email, password=password)
             django_user.save()
-            auth_login(request, django_user)
+
+        auth_login(request, django_user)
 
         user.generate_otp()
 
-        return JsonResponse({"message": "User created and logged in successfully. OTP sent to email."}, status=200)
-
+        redirect_url = reverse('otp_verification') + f"?email={email}"
+        return JsonResponse({"redirect_url": redirect_url}, status=200)
     return JsonResponse({"error": "Invalid request method."}, status=405)
-
 
 @csrf_exempt
+def otp_verification(request):
+    email = request.GET.get('email')
+    if not email:
+        return JsonResponse({"error": "Email is required."}, status=400)
+
+    return render(request, 'otp_verification.html', {'email': email})
+@csrf_exempt
 def verify_otp(request, email):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)  
-            user_otp = data.get('user_otp')
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON format."}, status=400)
+    print(f"Received {request.method} request for email: {email}")  # Debugging Log
 
-        if not user_otp:
-            return JsonResponse({"error": "OTP is required."}, status=400)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=405)
 
-        user = get_object_or_404(LoginForm, email=email)
+    try:
+        data = json.loads(request.body)
+        print("Received Data:", data)  # Debugging Log
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
-        if user.generated_otp == str(user_otp):
-            if user.otp_expiry and timezone.now() <= user.otp_expiry:
-                user.user_otp = user_otp
-                user.save()
+    otp_entered = data.get("otp")
+    if not otp_entered:
+        return JsonResponse({"error": "OTP is required."}, status=400)
+    try:
+        otp_instance = LoginForm.objects.get(email=email, generated_otp=otp_entered)
+        print(f"✅ OTP Found: {otp_instance}")  # Debugging Log
+    except OTP.DoesNotExist:
+        return JsonResponse({"error": "Invalid OTP."}, status=400)
 
-                student_id = StudentID.objects.filter(student=user).first()
-                if not student_id:
-                    student_id = StudentID(student=user, password=user.user_password)
-                    student_id.save()
+    if not otp_instance.is_otp_valid(otp_entered):
+        return JsonResponse({"error": "OTP expired."}, status=400)
 
-                return JsonResponse({
-                    "message": f"OTP verified successfully. Your unique ID is {student_id.unique_id}."
-                }, status=200)
-            else:
-                return JsonResponse({"error": "OTP has expired."}, status=400)
-        else:
-            return JsonResponse({"error": "Invalid OTP."}, status=400)
-
-    return JsonResponse({"error": "Invalid request method."}, status=405)
-
+    print("✅ OTP Verified Successfully")
+    return JsonResponse({
+        "message": "OTP verified successfully!",
+        "redirect_url": "/information/" + f"?email={email}" # Redirect to student information page
+    }, status=200)
 
 @csrf_exempt
 def getInformation(request):
-    if request.method == 'POST':
+    print(f"Received {request.method} request")  # Debugging Log
+
+    if request.method == "GET":
+        email = request.GET.get('email')
+        return render(request,'student_information.html',{"email":email},status=200)
+
+    if request.method == "POST":
         try:
             data = json.loads(request.body)
+            print("Received Data:", data)  # Debugging Log
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format."}, status=400)
 
         email = data.get('email')
         password = data.get('user_password')
+        print(email)
+        if not email:
+            return JsonResponse({"error": "Email is required."}, status=400)
 
-        if not email or not password:
-            return JsonResponse({"error": "Email and Password are required."}, status=400)
-
-        login_form_instance = LoginForm.objects.filter(email=email, user_password=password).first()
+        login_form_instance = LoginForm.objects.filter(email=email).first()
 
         if not login_form_instance:
             return JsonResponse({"error": "Unauthorized. Please sign up or sign in first."}, status=401)
@@ -137,6 +154,7 @@ def getInformation(request):
             return JsonResponse({"error": "CGPA number is required when CGPA type is 'cgpa'."}, status=400)
 
         try:
+            print(login_form_instance)
             home_instance, created = Home.objects.update_or_create(
                 student_name=login_form_instance,
                 defaults={
@@ -145,30 +163,29 @@ def getInformation(request):
                     'year': year,
                     'CGPA': CGPA,
                     'student_choice': student_choice,
-                    'cgpa_percentage': cgpa_percentage if CGPA == 'percentage' else None,
-                    'cgpa_number': cgpa_number if CGPA == 'cgpa' else None,
+                    'cgpa_percentage': float(cgpa_percentage) if CGPA == 'percentage' else None,
+                    'cgpa_number': float(cgpa_number) if CGPA == 'cgpa' else None,
                 }
             )
-
             student_id_instance, _ = StudentID.objects.update_or_create(
-                student=login_form_instance,
-                defaults={'password': password}
-            )
+    student=login_form_instance,
+    defaults={'password': login_form_instance.user_password}  # Ensure correct field mapping
+)
 
             return JsonResponse({
-                "message": "Details saved or updated successfully!",
-                "student_id": student_id_instance.unique_id  
-            }, status=201)
+    "message": "Details saved or updated successfully!",
+    "student_id": student_id_instance.unique_id  # Send unique_id to frontend
+}, status=201)
 
         except IntegrityError as e:
             return JsonResponse({"error": f"Integrity Error: {str(e)}"}, status=500)
 
-    return JsonResponse({"error": "Invalid request method."}, status=405)
 
-
-
+# Sign-In User
 @csrf_exempt
 def signInUser(request):
+    if request.method == "GET":
+        return render(request,'signup.html',status=200)
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -192,6 +209,7 @@ def signInUser(request):
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
+# Translation and Text-to-Speech
 model_name = "facebook/m2m100_418M"
 tokenizer = M2M100Tokenizer.from_pretrained(model_name)
 model = M2M100ForConditionalGeneration.from_pretrained(model_name)
@@ -203,18 +221,10 @@ LANGUAGES = [
     ("de", "German"),
     ("it", "Italian"),
     ("hi", "Hindi"),
-    ("ur", "Urdu"),
-    ("ta", "Tamil"),
-    ("ml", "Malayalam"),
+
 ]
-    
+
 def translate_text(text, target_lang):
-    """
-    Translate text using:
-    - `translate` library for Tamil, Telugu, Malayalam
-    - Google Translate API for other regional languages
-    - M2M-100 for international languages
-    """
     if target_lang in ['ta', 'te', 'ml']: 
         return translate_with_other_method(text, target_lang)
     elif target_lang in ['hi', 'kn', 'mr', 'gu', 'bn', 'pa', 'ur']:  
@@ -223,9 +233,6 @@ def translate_text(text, target_lang):
         return translate_with_m2m100(text, target_lang)
 
 def translate_with_m2m100(text, target_lang):
-    """
-    Translate text using the M2M-100 model.
-    """
     tokenizer.src_lang = "en"
     encoded_text = tokenizer(text, return_tensors="pt")
     generated_tokens = model.generate(
@@ -236,9 +243,6 @@ def translate_with_m2m100(text, target_lang):
     return translated_text
 
 def translate_with_other_method(text, target_lang):
-    """
-    Translate Tamil, Telugu, and Malayalam using the `translate` library.
-    """
     lang_mapping = {
         'ta': 'ta',  # Tamil
         'te': 'te',  # Telugu
@@ -248,29 +252,32 @@ def translate_with_other_method(text, target_lang):
     return translator.translate(text)
 
 def translate_with_google(text, target_lang):
-    """
-    Translate Hindi, Kannada, Marathi, Gujarati, Bengali, Punjabi, and Urdu using Google Translate.
-    """
     google_translator = GoogleTranslator()
     translated_text = google_translator.translate(text, dest=target_lang).text
     return translated_text
+
 def upload_file(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized. Please sign in first."}, status=401)
+
+    email = request.user.email  # Get the logged-in user's email
+
     if request.method == 'POST':
-        email = request.POST.get('email')
+        print(request.POST)  # Debugging - Check received data
+
         password = request.POST.get('password')
 
-        if not email or not password:
-            return JsonResponse({"error": "Email and Password are required to upload files."}, status=400)
-
-        # Check if user exists (either signed up or signed in)
-        user = LoginForm.objects.filter(email=email, user_password=password).first()
+        # Fetch the user using email
+        user = LoginForm.objects.filter(email=email).first()
 
         if not user:
-            return JsonResponse({"error": "Unauthorized. Please sign up or sign in first."}, status=401)
+            return JsonResponse({"error": "Unauthorized. Please check your email."}, status=401)
 
         form = UploadForm(request.POST, request.FILES)
         if form.is_valid():
-            upload = form.save()
+            upload = form.save(commit=False)  # Don't save yet
+            upload.student_upload = user  # Assign the logged-in user
+            upload.save()  # Now save the record
 
             if upload.summary:
                 return redirect('summary_detail', pk=upload.pk)
@@ -278,10 +285,13 @@ def upload_file(request):
                 return redirect('keywords_detail', pk=upload.pk)
             else:
                 return redirect('file_list')
+
     else:
         form = UploadForm()
 
-    return render(request, 'upload.html', {'form': form})
+    return render(request, 'upload.html', {'form': form, 'email': email})
+
+
 def speak(text, language="en"):
     try:
         audio_dir = os.path.join(settings.MEDIA_ROOT, 'audio')
@@ -311,8 +321,9 @@ def speak(text, language="en"):
 
 def summary_detail(request, pk):
     upload = get_object_or_404(UploadFile, pk=pk)
-    translated_summary = None
+    print("Summary:", upload.summary)  # Debugging line
 
+    translated_summary = None
     if request.method == 'POST':
         action = request.POST.get('action')
         target_lang = request.POST.get('target_lang')
@@ -323,13 +334,14 @@ def summary_detail(request, pk):
         elif action == 'speak':
             text_to_speak = upload.summary if not translated_summary else translated_summary
             if text_to_speak:
-                speak(text_to_speak, language=target_lang) 
+                speak(text_to_speak, language=target_lang)
 
     return render(request, 'file_summary.html', {
         'upload': upload,
         'translated_summary': translated_summary,
         'languages': LANGUAGES,
     })
+
 
 def keywords_detail(request, pk):
     upload = get_object_or_404(UploadFile, pk=pk)
@@ -355,38 +367,30 @@ def keywords_detail(request, pk):
         'languages': LANGUAGES,
     })
 
-
 def file_list(request):
     files = UploadFile.objects.all()
     return render(request, 'file_list.html', {'files': files})
 
+# Feedback Submission
 def submit_feedback_summary(request):
     if request.method == "POST":
         feedback_text = request.POST.get('feedback')
         user = request.user  
         feedback = Feedback(text=feedback_text, category="summary", user=user)
         feedback.save()
-        
         return redirect('thank_you')  
-
     return render(request, 'files_summary.html')
 
 def submit_feedback_keywords(request):
     if request.method == "POST":
         feedback_text = request.POST.get('feedback')
         user = request.user 
-
         feedback = Feedback(text=feedback_text, category="keywords", user=user)
         feedback.save() 
-
         return redirect('thank_you') 
-
     return render(request, 'files_keyword.html')
 
-from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
-from django.contrib import messages
-
+# Admin Login
 def admin_login(request):
     if request.method == 'POST':
         email = request.POST.get('email')

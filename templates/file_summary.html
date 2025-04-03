@@ -2,43 +2,324 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Summary Details</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Summary - Adaptive Peer Tutoring</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: white;
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff);
+            animation: gradientAnimation 10s infinite alternate;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff); }
+            50% { background: linear-gradient(135deg, #2575fc, #00c6ff, #6a11cb); }
+            100% { background: linear-gradient(135deg, #00c6ff, #6a11cb, #2575fc); }
+        }
+
+        /* Header Navigation Bar */
+        .navbar {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand i {
+            margin-right: 10px;
+            font-size: 2rem;
+            color: #00c6ff;
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 500;
+            margin: 0 10px;
+            padding: 8px 15px;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .navbar-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00c6ff;
+            transition: 0.3s;
+        }
+
+        .navbar-nav .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .navbar-nav .nav-link.active {
+            color: #00c6ff !important;
+        }
+
+        /* Content Section */
+        .content-section {
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-section h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            animation: fadeInDown 1.5s;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+            margin-bottom: 30px;
+        }
+
+        .content-section h2, .content-section h3 {
+            color: #00c6ff;
+            margin-bottom: 20px;
+        }
+
+        .content-section p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 800px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+        }
+
+        /* Summary Box */
+        .summary-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            max-width: 800px;
+            text-align: left;
+        }
+
+        /* Form Elements */
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            margin: 0 10px;
+        }
+
+        /* Fantasy Button Design */
+        .btn-fantasy {
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6ff);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            color: white;
+            transition: 0.3s;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-fantasy::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 70%);
+            transform: translate(-50%, -50%) scale(0);
+            transition: 0.5s;
+            border-radius: 50%;
+        }
+
+        .btn-fantasy:hover::before {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .btn-fantasy:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 198, 255, 0.6);
+        }
+
+        .btn-fantasy:active {
+            transform: scale(0.95);
+        }
+
+        /* Animated Shapes */
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+            z-index: -1;
+        }
+
+        .shape-1 {
+            width: 100px;
+            height: 100px;
+            top: 10%;
+            left: 10%;
+            animation-duration: 8s;
+        }
+
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            top: 50%;
+            left: 70%;
+            animation-duration: 10s;
+        }
+
+        .shape-3 {
+            width: 80px;
+            height: 80px;
+            top: 70%;
+            left: 20%;
+            animation-duration: 12s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+            100% { transform: translateY(0) rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-section {
+                padding: 50px 15px;
+            }
+            
+            .content-section h1 {
+                font-size: 2.2rem;
+            }
+            
+            .summary-box {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Summary Details</h1>
+    <!-- Header Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-book"></i> Adaptive Peer Tutoring
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="home.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="upload.html">Upload</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Summary</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-    <h2>Summary:</h2>
-    <p id="summary">{{ upload.summary }}</p>
-    <button onclick="speakText('{% filter escapejs %}{{ upload.summary }}{% endfilter %}')">Speak Summary</button>
+    <!-- Content Section -->
+    <section class="content-section">
+        <!-- Animated Shapes -->
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
 
-    {% if translated_summary %}
-        <h3>Translated Summary:</h3>
-        <p id="translated_summary">{{ translated_summary }}</p>
-        <button onclick="speakText('{% filter escapejs %}{{ translated_summary }}{% endfilter %}')">Speak Translated Summary</button>
+        <h1>Summary Details</h1>
         
-        <!-- Feedback form for translated summary -->
-        <h3>Your Feedback on Summary:</h3>
-        <form id="feedback-form-summary" method="post" action="{% url 'submit_feedback_summary' %}">
-            {% csrf_token %}
-            <textarea name="feedback" rows="4" cols="50" placeholder="Please provide your feedback here..."></textarea><br><br>
-            <button type="submit">Submit Feedback</button>
-        </form>
-    {% else %}
-        <form method="post">
-            {% csrf_token %}
-            <button type="submit" name="action" value="translate">Translate</button>
-            <select name="target_lang">
-                {% for code, name in languages %}
-                    <option value="{{ code }}">{{ name }}</option>
-                {% endfor %}
-            </select>
-        </form>
-    {% endif %}
+        <div class="summary-box">
+            <h2>Summary:</h2>
+            <p id="summary">{{ upload.summary }}</p>
+            <button class="btn-fantasy" onclick="speakText('{% filter escapejs %}{{ upload.summary }}{% endfilter %}')">
+                <i class="bi bi-megaphone"></i> Speak Summary
+            </button>
+            
+            {% if translated_summary %}
+                <h3>Translated Summary:</h3>
+                <p id="translated_summary">{{ translated_summary }}</p>
+                <button class="btn-fantasy" onclick="speakText('{% filter escapejs %}{{ translated_summary }}{% endfilter %}')">
+                    <i class="bi bi-megaphone"></i> Speak Translated Summary
+                </button>
+                
+                <!-- Feedback form for translated summary -->
+                <h3>Your Feedback on Summary:</h3>
+                <form id="feedback-form-summary" method="post" action="{% url 'submit_feedback_summary' %}">
+                    {% csrf_token %}
+                    <textarea name="feedback" rows="4" placeholder="Please provide your feedback here..."></textarea><br>
+                    <button type="submit" class="btn-fantasy">Submit Feedback</button>
+                </form>
+            {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="action" value="translate" class="btn-fantasy">Translate</button>
+                    <select name="target_lang">
+                        {% for code, name in languages %}
+                            <option value="{{ code }}">{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            {% endif %}
+            
+            <button class="btn-fantasy" onclick="generatePDF()">
+                <i class="bi bi-file-earmark-pdf"></i> Download PDF
+            </button>
+        </div>
+    </section>
 
-    <button onclick="generatePDF()">Download PDF</button>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Add active class to clicked nav link
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+            });
+        });
+
         function speakText(text) {
             console.log("Speaking text:", text); 
             const speech = new SpeechSynthesisUtterance(text);
@@ -50,11 +331,14 @@
             const doc = new jsPDF();
 
             const originalSummary = document.getElementById("summary").innerText;
-            const translatedSummary = document.getElementById("translated_summary") ? document.getElementById("translated_summary").innerText : "No translation available.";
+            const translatedSummary = document.getElementById("translated_summary") ? 
+                document.getElementById("translated_summary").innerText : "No translation available.";
 
             // Adding content to PDF
-            doc.text("Original Summary: " + originalSummary, 10, 10);
-            doc.text("Translated Summary: " + translatedSummary, 10, 20);
+            doc.text("Original Summary:", 10, 10);
+            doc.text(originalSummary, 10, 20);
+            doc.text("Translated Summary:", 10, 40);
+            doc.text(translatedSummary, 10, 50);
 
             // Save the PDF
             doc.save("Feedback_Summary.pdf");
